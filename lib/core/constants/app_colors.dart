@@ -51,4 +51,15 @@ class AppColors {
 
   //  Chung (không đổi theo theme)
   static const primary1 = Color(0xFF2186FA);
+
+  // ── Auth & Brand Colors ──
+  static const brandPurple = Color(0xFF5300B4); // Dark purple from the AI Stylist logo
+  static const buttonGradientStartLogin = Color(0xFF5A00C8);
+  static const buttonGradientEndLogin = Color(0xFFE8256F);
+  
+  static const buttonGradientStartRegister = Color(0xFFF07575);
+  static const buttonGradientEndRegister = Color(0xFF5EC4B2);
+
+  static const textFieldBorder = Color(0xFFD6D6E0);
+  static const textFieldHint = Color(0xFFAAAAAA);
 }
