@@ -7,11 +7,7 @@ class ActionCard extends StatelessWidget {
   final HomeAction action;
   final VoidCallback onTap;
 
-  const ActionCard({
-    super.key,
-    required this.action,
-    required this.onTap,
-  });
+  const ActionCard({super.key, required this.action, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -43,11 +39,7 @@ class ActionCard extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Center(
-                child: Icon(
-                  action.icon,
-                  color: action.iconColor,
-                  size: 20.sp,
-                ),
+                child: Icon(action.icon, color: action.iconColor, size: 20.sp),
               ),
             ),
             // Text Details
@@ -56,10 +48,9 @@ class ActionCard extends StatelessWidget {
               children: [
                 Text(
                   action.title,
-                  style: AppTextStyles.titleMedium(color: action.titleColor).copyWith(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: AppTextStyles.titleMedium(
+                    color: action.titleColor,
+                  ).copyWith(fontSize: 16.sp, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 4.h),
                 Text(

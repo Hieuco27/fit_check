@@ -4,9 +4,16 @@ import 'package:fit_check/core/constants/app_colors.dart';
 import 'package:fit_check/core/utils/text_styles.dart';
 
 class SocialButton extends StatelessWidget {
+  final String text;
+  final Widget icon;
   final VoidCallback onPressed;
 
-  const SocialButton({super.key, required this.onPressed});
+  const SocialButton({
+    super.key,
+    required this.text,
+    required this.icon,
+    required this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -18,17 +25,16 @@ class SocialButton extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           side: const BorderSide(color: AppColors.textFieldBorder),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.r),
+            borderRadius: BorderRadius.circular(24.r),
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Placeholder for Google Icon. If you have an SVG, use SvgPicture.asset here.
-            Icon(Icons.g_mobiledata, size: 32.sp, color: Colors.blue),
+            icon,
             SizedBox(width: 8.w),
             Text(
-              'Continue with Google',
+              text,
               style: AppTextStyles.titleMedium().copyWith(
                 color: AppColors.textPrimary,
                 fontWeight: FontWeight.w600,

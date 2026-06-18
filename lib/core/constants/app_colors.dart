@@ -62,4 +62,9 @@ class AppColors {
 
   static const textFieldBorder = Color(0xFFD6D6E0);
   static const textFieldHint = Color(0xFFAAAAAA);
+
+  // ── Wardro Colors ──
+  static const wardroBrown = Color(0xFF90553A);
+  static const wardroRedText = Color(0xFFE55A54);
+  static const wardroInputBg = Color(0xFFF4F5F7);
 }

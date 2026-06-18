@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fit_check/core/constants/app_colors.dart';
-import 'package:fit_check/core/theme/app_theme.dart';
 import 'package:fit_check/core/utils/text_styles.dart';
 import 'package:fit_check/features/auth/presentation/bloc/login/login_bloc.dart';
 import 'package:fit_check/features/auth/presentation/bloc/login/login_event.dart';
@@ -45,180 +44,102 @@ class _LoginViewState extends State<_LoginView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFF8E8F8), Color(0xFFE8F2F8)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: SafeArea(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Center(
           child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                SizedBox(height: 10.h),
-                // Logo placeholder
-                Container(
-                  width: 60.w,
-                  height: 60.w,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Icon(
-                      Icons.checkroom,
-                      color: AppColors.brandPurple,
-                      size: 30.sp,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 12.h),
                 Text(
-                  'Welcome back',
+                  'Sign in to Wardro',
                   style: AppTextStyles.headlineLarge().copyWith(
-                    color: AppColors.brandPurple,
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 32.sp,
                   ),
                 ),
-                SizedBox(height: 6.h),
-                Text(
-                  'Unlock your AI-curated wardrobe',
-                  style: AppTextStyles.bodyMedium().copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                SizedBox(height: 20.h),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 20.w,
-                    vertical: 20.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.8),
-                    borderRadius: BorderRadius.circular(16.r),
-                    border: Border.all(color: Colors.white, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.02),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      AuthTextField(
-                        label: 'Email',
-                        hintText: 'your@email.com',
-                        prefixIcon: Icons.mail_outline,
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                      ),
-                      SizedBox(height: 12.h),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          AuthTextField(
-                            label: 'Password',
-                            hintText: '••••••••',
-                            prefixIcon: Icons.lock_outline,
-                            isPassword: true,
-                            controller: _passwordController,
-                          ),
-                          SizedBox(height: 6.h),
-                          TextButton(
-                            onPressed: () {},
-                            style: TextButton.styleFrom(
-                              padding: EdgeInsets.zero,
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            child: Text(
-                              'Forgot Password?',
-                              style: AppTextStyles.labelMedium().copyWith(
-                                color: AppColors.brandPurple,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 20.h),
-                      BlocConsumer<LoginBloc, LoginState>(
-                        listener: (context, state) {
-                          if (state is LoginSuccess) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Login Successful!'),
-                              ),
-                            );
-                            context.go('/home');
-                          } else if (state is LoginError) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(state.message),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        },
-                        builder: (context, state) {
-                          return PrimaryButton(
-                            text: 'Login to Studio',
-                            isLoading: state is LoginLoading,
-                            gradient: AppGradients.loginButton,
-                            trailingIcon: const Icon(
-                              Icons.auto_awesome,
-                              color: Colors.white,
-                            ),
-                            onPressed: () {
-                              context.read<LoginBloc>().add(
-                                LoginSubmitted(
-                                  email: _emailController.text,
-                                  password: _passwordController.text,
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
-                      SizedBox(height: 20.h),
-                      Row(
-                        children: [
-                          const Expanded(
-                            child: Divider(color: AppColors.textFieldBorder),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16.w),
-                            child: Text(
-                              'Or continue with',
-                              style: AppTextStyles.bodyMedium().copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ),
-                          const Expanded(
-                            child: Divider(color: AppColors.textFieldBorder),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 12.h),
-                      SocialButton(onPressed: () {}),
-                    ],
-                  ),
+                SizedBox(height: 8.h),
+                AuthTextField(
+                  label: 'Email Address',
+                  hintText: 'Enter your email address',
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
                 ),
                 SizedBox(height: 20.h),
+                AuthTextField(
+                  label: 'Password',
+                  hintText: '••••••••',
+                  isPassword: true,
+                  controller: _passwordController,
+                ),
+                SizedBox(height: 16.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () {},
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        'Forgot Password',
+                        style: AppTextStyles.labelMedium().copyWith(
+                          color: AppColors.wardroRedText,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 32.h),
+                BlocConsumer<LoginBloc, LoginState>(
+                  listener: (context, state) {
+                    if (state is LoginSuccess) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Login Successful!')),
+                      );
+                      context.go('/home');
+                    } else if (state is LoginError) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(state.message),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                  builder: (context, state) {
+                    return PrimaryButton(
+                      text: 'Sign In',
+                      isLoading: state is LoginLoading,
+                      backgroundColor: AppColors.wardroBrown,
+                      onPressed: () {
+                        context.read<LoginBloc>().add(
+                          LoginSubmitted(
+                            email: _emailController.text,
+                            password: _passwordController.text,
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+                SizedBox(height: 24.h),
+                SocialButton(
+                  text: 'Continue with Google',
+                  icon: Icon(
+                    Icons.g_mobiledata,
+                    size: 32.sp,
+                    color: Colors.blue,
+                  ),
+                  onPressed: () {},
+                ),
+                SizedBox(height: 32.h),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -240,7 +161,7 @@ class _LoginViewState extends State<_LoginView> {
                       child: Text(
                         'Sign Up',
                         style: AppTextStyles.titleSmall().copyWith(
-                          color: AppColors.brandPurple,
+                          color: AppColors.wardroBrown,
                           fontWeight: FontWeight.bold,
                         ),
                       ),

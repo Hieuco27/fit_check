@@ -6,7 +6,7 @@ import 'package:fit_check/core/utils/text_styles.dart';
 class AuthTextField extends StatefulWidget {
   final String label;
   final String hintText;
-  final IconData prefixIcon;
+  final IconData? prefixIcon;
   final bool isPassword;
   final TextEditingController controller;
   final TextInputType keyboardType;
@@ -15,7 +15,7 @@ class AuthTextField extends StatefulWidget {
     super.key,
     required this.label,
     required this.hintText,
-    required this.prefixIcon,
+    this.prefixIcon,
     this.isPassword = false,
     required this.controller,
     this.keyboardType = TextInputType.text,
@@ -50,11 +50,11 @@ class _AuthTextFieldState extends State<AuthTextField> {
             hintStyle: AppTextStyles.bodyMedium().copyWith(
               color: AppColors.textFieldHint,
             ),
-            prefixIcon: Icon(
+            prefixIcon: widget.prefixIcon != null ? Icon(
               widget.prefixIcon,
               color: AppColors.textFieldHint,
               size: 20.sp,
-            ),
+            ) : null,
             suffixIcon: widget.isPassword
                 ? IconButton(
                     icon: Icon(
@@ -72,23 +72,23 @@ class _AuthTextFieldState extends State<AuthTextField> {
                   )
                 : null,
             contentPadding: EdgeInsets.symmetric(
-              vertical: 10.h,
-              horizontal: 12.w,
+              vertical: 16.h,
+              horizontal: 16.w,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.r),
-              borderSide: const BorderSide(color: AppColors.textFieldBorder),
+              borderRadius: BorderRadius.circular(16.r),
+              borderSide: BorderSide.none,
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.r),
-              borderSide: const BorderSide(color: AppColors.textFieldBorder),
+              borderRadius: BorderRadius.circular(16.r),
+              borderSide: BorderSide.none,
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.r),
-              borderSide: const BorderSide(color: AppColors.brandPurple),
+              borderRadius: BorderRadius.circular(16.r),
+              borderSide: BorderSide.none,
             ),
             filled: true,
-            fillColor: Colors.transparent,
+            fillColor: AppColors.wardroInputBg,
           ),
         ),
       ],
