@@ -54,7 +54,7 @@ class _LoginViewState extends State<_LoginView> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
-                  'Sign in to Wardro',
+                  'Sign in',
                   style: AppTextStyles.headlineLarge().copyWith(
                     color: Colors.black,
                     fontWeight: FontWeight.bold,
@@ -129,7 +129,9 @@ class _LoginViewState extends State<_LoginView> {
                     );
                   },
                 ),
-                SizedBox(height: 24.h),
+                SizedBox(height: 10.h),
+                Text('Or', style: AppTextStyles.bodySmall()),
+                SizedBox(height: 10.h),
                 SocialButton(
                   text: 'Continue with Google',
                   icon: Icon(

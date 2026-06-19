@@ -136,6 +136,15 @@ class AppTextStyles {
     );
   }
 
+  // Body styles
+  static TextStyle bodyLarge1({Color? color}) {
+    return GoogleFonts.inter(
+      fontSize: 14.sp,
+      fontWeight: FontWeight.w700,
+      color: color,
+    );
+  }
+
   static TextStyle bodyLargeEmphasized() {
     return GoogleFonts.inter(
       fontSize: 16.sp,

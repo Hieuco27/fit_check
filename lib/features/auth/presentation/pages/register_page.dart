@@ -57,7 +57,7 @@ class _RegisterViewState extends State<_RegisterView> {
         child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
                 'Sign Up',
@@ -139,7 +139,9 @@ class _RegisterViewState extends State<_RegisterView> {
                   );
                 },
               ),
-              SizedBox(height: 24.h),
+              SizedBox(height: 10.h),
+              Text('Or', style: AppTextStyles.bodySmall()),
+              SizedBox(height: 10.h),
               SocialButton(
                 text: 'Continue with Google',
                 icon: Icon(Icons.g_mobiledata, size: 32.sp, color: Colors.blue),

@@ -32,15 +32,15 @@ class _ProfileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF8FB), // Very light purple/pink background
+      backgroundColor: const Color(
+        0xFFFAF8FB,
+      ), // Very light purple/pink background
       body: SafeArea(
         child: BlocListener<ProfileBloc, ProfileState>(
           listener: (context, state) {
             if (state is SignOutSuccess) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Logged Out Successfully'),
-                ),
+                const SnackBar(content: Text('Logged Out Successfully')),
               );
               // Navigate back to login page
               context.go('/login');
@@ -57,7 +57,10 @@ class _ProfileView extends StatelessWidget {
               } else if (state is ProfileLoaded) {
                 final user = state.user;
                 return SingleChildScrollView(
-                  padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 24.w,
+                    vertical: 16.h,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -103,7 +106,9 @@ class _ProfileView extends StatelessWidget {
                       SignOutButton(
                         isLoading: state.isSigningOut,
                         onTap: () {
-                          context.read<ProfileBloc>().add(const SignOutPressed());
+                          context.read<ProfileBloc>().add(
+                            const SignOutPressed(),
+                          );
                         },
                       ),
                       SizedBox(height: 16.h),

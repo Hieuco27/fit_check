@@ -53,10 +53,12 @@ class AppColors {
   static const primary1 = Color(0xFF2186FA);
 
   // ── Auth & Brand Colors ──
-  static const brandPurple = Color(0xFF5300B4); // Dark purple from the AI Stylist logo
+  static const brandPurple = Color(
+    0xFF5300B4,
+  ); // Dark purple from the AI Stylist logo
   static const buttonGradientStartLogin = Color(0xFF5A00C8);
   static const buttonGradientEndLogin = Color(0xFFE8256F);
-  
+
   static const buttonGradientStartRegister = Color(0xFFF07575);
   static const buttonGradientEndRegister = Color(0xFF5EC4B2);
 
@@ -67,4 +69,18 @@ class AppColors {
   static const wardroBrown = Color(0xFF90553A);
   static const wardroRedText = Color(0xFFE55A54);
   static const wardroInputBg = Color(0xFFF4F5F7);
+
+  // ── Camera & Try-On Feature Colors ──
+  static const cameraGold = Color(0xFFF5A623); // Garment mode frame, CTA chính
+  static const cameraGoldDim = Color(0x33F5A623); // Gold mờ (fill)
+  static const detectionGreen = Color(
+    0xFF4CAF50,
+  ); // AI detected, hotspot, true-to-size
+  static const hotspotGlow = Color(0xFF00E676); // Hotspot pulse glow
+  static const cameraOverlay = Color(0x26FFFFFF); // Overlay mờ trên camera
+
+  // AI Fit Rating Badge Colors
+  static const fitTrueToSize = Color(0xFF4CAF50); // Vừa vặn
+  static const fitTight = Color(0xFFF44336); // Quá chật
+  static const fitLoose = Color(0xFFFF9800); // Quá rộng
 }

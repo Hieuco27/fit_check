@@ -45,5 +45,12 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Camera and photo permissions for Smart Camera feature -->
+	<key>NSCameraUsageDescription</key>
+	<string>Fit Check cần truy cập camera để chụp ảnh thử đồ và phân tích trang phục của bạn.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Fit Check cần truy cập thư viện ảnh để bạn có thể chọn ảnh từ điện thoại.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Fit Check cần quyền lưu ảnh kết quả thử đồ vào thư viện của bạn.</string>
 </dict>
 </plist>

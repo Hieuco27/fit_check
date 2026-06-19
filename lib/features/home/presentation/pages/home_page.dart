@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:fit_check/features/closet/presentation/pages/closet_page.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-
+import 'package:go_router/go_router.dart';
 import 'package:fit_check/features/home/presentation/bloc/home_bloc.dart';
 import 'package:fit_check/features/home/presentation/bloc/home_event.dart';
 import 'package:fit_check/features/home/presentation/bloc/home_state.dart';
@@ -86,11 +87,7 @@ class _HomeView extends StatelessWidget {
       case 0:
         return _buildHomeTab(context);
       case 1:
-        return _buildPlaceholderScreen(
-          context,
-          'Tủ Quần Áo',
-          Icons.door_sliding_outlined,
-        );
+        return const ClosetPage();
       case 2:
         return _buildPlaceholderScreen(
           context,
@@ -104,9 +101,7 @@ class _HomeView extends StatelessWidget {
     }
   }
 
-  // ─────────────────────────────────────────────────────────
   //  HOME TAB — single scrollable page
-  // ─────────────────────────────────────────────────────────
   Widget _buildHomeTab(BuildContext context) {
     return Stack(
       children: [
@@ -115,7 +110,7 @@ class _HomeView extends StatelessWidget {
           slivers: [
             // Status bar spacing
             SliverToBoxAdapter(
-              child: SizedBox(height: MediaQuery.of(context).padding.top + 8.h),
+              child: SizedBox(height: MediaQuery.of(context).padding.top),
             ),
 
             // HEADER
@@ -126,7 +121,7 @@ class _HomeView extends StatelessWidget {
             // ── SECTION 1: Ảnh chân dung của bạn ──
             SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.only(top: 20.h, bottom: 12.h),
+                padding: EdgeInsets.only(bottom: 10.h),
                 child: SectionTitle(
                   title: 'Ảnh chân dung của bạn',
                   showArrow: false,
@@ -217,49 +212,23 @@ class _HomeView extends StatelessWidget {
         ),
       ),
       child: GestureDetector(
-        onTap: () {},
-        child: Container(
-          height: 54.h,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF7B2FFF), Color(0xFF3B9EFF), Color(0xFF00D4FF)],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
+        onTap: () {
+          context.push('/camera');
+        },
+        child: Align(
+          alignment: Alignment.bottomRight,
+          child: Container(
+            width: 72.w,
+            height: 72.w,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Color(0xFFFDFCF9),
             ),
-            borderRadius: BorderRadius.circular(28.r),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF7B2FFF).withValues(alpha: 0.55),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-              ),
-              BoxShadow(
-                color: const Color(0xFF00D4FF).withValues(alpha: 0.2),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.add_circle_outline_rounded,
-                  color: Colors.white,
-                  size: 22.sp,
-                ),
-                SizedBox(width: 10.w),
-                Text(
-                  'Bắt đầu thử',
-                  style: GoogleFonts.inter(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-              ],
+            child: Image.asset(
+              'assets/images/home/camera.png',
+              width: 72.w,
+              height: 72.w,
+              fit: BoxFit.contain,
             ),
           ),
         ),

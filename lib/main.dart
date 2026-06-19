@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
           title: 'Fit Check',
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
-          themeMode: ThemeMode.light, // Defaulting to light mode based on UI
+          themeMode: ThemeMode.light,
           routerConfig: AppRouter.router,
           debugShowCheckedModeBanner: false,
         );

@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:fit_check/features/tryon/domain/entities/clothing_item.dart';
+import 'package:fit_check/features/tryon/domain/entities/garment_variant.dart';
+import 'package:fit_check/features/tryon/domain/entities/store_location.dart';
 import 'package:fit_check/features/tryon/domain/entities/tryon_session.dart';
 
 abstract class TryonState extends Equatable {
@@ -9,9 +11,127 @@ abstract class TryonState extends Equatable {
   List<Object?> get props => [];
 }
 
+/// Khởi đầu
 class TryonInitial extends TryonState {
   const TryonInitial();
 }
+
+// ─── States mới cho luồng 3 màn hình ─────────────────────────────────────────
+
+/// AI đang xử lý ghép đồ — hiển thị checklist animation
+class TryOnProcessing extends TryonState {
+  /// Danh sách các bước xử lý AI
+  final List<String> steps;
+  /// Index bước đang xử lý hiện tại
+  final int currentStepIndex;
+
+  const TryOnProcessing({
+    this.steps = const [
+      'Nhận diện tư thế cơ thể',
+      'Tách nền quần áo',
+      'Căn chỉnh tỉ lệ & góc nhìn',
+      'Render kết quả cuối',
+    ],
+    this.currentStepIndex = 0,
+  });
+
+  TryOnProcessing copyWith({int? currentStepIndex}) {
+    return TryOnProcessing(
+      steps: steps,
+      currentStepIndex: currentStepIndex ?? this.currentStepIndex,
+    );
+  }
+
+  @override
+  List<Object?> get props => [currentStepIndex];
+}
+
+/// Kết quả try-on đã load xong
+class TryOnResultLoaded extends TryonState {
+  final TryonSession session;
+  final bool showAfter;       // true = xem kết quả AI, false = ảnh gốc
+  final List<GarmentVariant> availableVariants;
+
+  const TryOnResultLoaded({
+    required this.session,
+    this.showAfter = true,
+    this.availableVariants = const [],
+  });
+
+  TryOnResultLoaded copyWith({
+    TryonSession? session,
+    bool? showAfter,
+    List<GarmentVariant>? availableVariants,
+  }) {
+    return TryOnResultLoaded(
+      session: session ?? this.session,
+      showAfter: showAfter ?? this.showAfter,
+      availableVariants: availableVariants ?? this.availableVariants,
+    );
+  }
+
+  @override
+  List<Object?> get props => [session, showAfter, availableVariants];
+}
+
+/// Đang re-render do đổi variant (size/màu)
+class TryOnRendering extends TryonState {
+  final TryonSession previousSession;
+  final GarmentVariant newVariant;
+
+  const TryOnRendering({
+    required this.previousSession,
+    required this.newVariant,
+  });
+
+  @override
+  List<Object?> get props => [previousSession, newVariant];
+}
+
+/// Đang lưu session
+class TryOnSaving extends TryonState {
+  final TryonSession session;
+  const TryOnSaving(this.session);
+
+  @override
+  List<Object?> get props => [session];
+}
+
+/// Đang tải danh sách cửa hàng gần nhất
+class StoresLoading extends TryonState {
+  final TryonSession session;
+  const StoresLoading(this.session);
+
+  @override
+  List<Object?> get props => [session];
+}
+
+/// Danh sách cửa hàng gần nhất đã load
+class StoresLoaded extends TryonState {
+  final TryonSession session;
+  final List<StoreLocation> stores;
+
+  const StoresLoaded({required this.session, required this.stores});
+
+  @override
+  List<Object?> get props => [session, stores];
+}
+
+/// Thành công
+class TryOnSuccess extends TryonState {
+  const TryOnSuccess();
+}
+
+/// Lỗi
+class TryOnError extends TryonState {
+  final String message;
+  const TryOnError(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}
+
+// ─── Legacy states (giữ để backward compat) ──────────────────────────────────
 
 class TryOnSelecting extends TryonState {
   final String originalImagePath;
@@ -41,50 +161,9 @@ class TryOnSelecting extends TryonState {
   }
 
   @override
-  List<Object?> get props => [
-        originalImagePath,
-        activeCategory,
-        availableItems,
-        selectedItems,
-      ];
+  List<Object?> get props => [originalImagePath, activeCategory, availableItems, selectedItems];
 }
 
 class TryOnGenerating extends TryonState {
   const TryOnGenerating();
-}
-
-class TryOnResultLoaded extends TryonState {
-  final TryonSession session;
-  final bool showAfter; // true for "After (AI)", false for "Before"
-
-  const TryOnResultLoaded({
-    required this.session,
-    required this.showAfter,
-  });
-
-  TryOnResultLoaded copyWith({
-    TryonSession? session,
-    bool? showAfter,
-  }) {
-    return TryOnResultLoaded(
-      session: session ?? this.session,
-      showAfter: showAfter ?? this.showAfter,
-    );
-  }
-
-  @override
-  List<Object?> get props => [session, showAfter];
-}
-
-class TryOnSuccess extends TryonState {
-  const TryOnSuccess();
-}
-
-class TryOnError extends TryonState {
-  final String message;
-
-  const TryOnError(this.message);
-
-  @override
-  List<Object?> get props => [message];
 }

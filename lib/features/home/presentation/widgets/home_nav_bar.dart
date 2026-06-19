@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:fit_check/core/constants/app_colors.dart';
+import 'package:go_router/go_router.dart';
 
 class HomeNavBar extends StatelessWidget {
   final int currentIndex;
@@ -62,7 +63,7 @@ class HomeNavBar extends StatelessWidget {
   Widget _buildCenterItem(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // Handle scan action or modal popup
+        context.push('/camera');
       },
       child: Container(
         width: 48.w,
