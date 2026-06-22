@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,14 +12,22 @@ import 'package:fit_check/features/capture/domain/usecases/analyze_portrait_usec
 import 'package:fit_check/features/capture/presentation/bloc/camera_bloc.dart';
 import 'package:fit_check/features/capture/presentation/bloc/camera_event.dart';
 import 'package:fit_check/features/capture/presentation/bloc/camera_state.dart';
-import 'package:fit_check/features/capture/presentation/widgets/garment_frame_overlay.dart';
-import 'package:fit_check/features/capture/presentation/widgets/human_silhouette_overlay.dart';
-import 'package:fit_check/features/capture/presentation/widgets/mode_slider_widget.dart';
 
-/// Màn Hình 1: Smart Camera — giao diện camera tối giản như Instagram/TikTok.
-/// BlocProvider được tạo ở đây để lifecycle gắn với page này.
+/// Màn Hình Camera — giao diện chụp ảnh tự nhiên như iOS/Android
+/// Không còn khung guide overlay — chụp ảnh bình thường
 class SmartCameraPage extends StatelessWidget {
-  const SmartCameraPage({super.key});
+  /// Mode mở camera: portrait (selfie) hoặc garment (quần áo)
+  final CameraMode initialMode;
+
+  /// true → mở cam trước mặc định (portrait/selfie)
+  /// false → mở cam sau mặc định (garment)
+  final bool useFrontCamera;
+
+  const SmartCameraPage({
+    super.key,
+    this.initialMode = CameraMode.portrait,
+    this.useFrontCamera = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -27,28 +36,30 @@ class SmartCameraPage extends StatelessWidget {
       create: (_) => CameraBloc(
         analyzePortrait: AnalyzePortraitUseCase(repo),
         analyzeGarment: AnalyzeGarmentUseCase(repo),
-      )..add(const InitCameraEvent()),
-      child: const _SmartCameraView(),
+      )..add(InitCameraEvent(
+          initialMode: initialMode,
+          useFrontCamera: useFrontCamera,
+        )),
+      child: _SmartCameraView(initialMode: initialMode),
     );
   }
 }
 
 class _SmartCameraView extends StatelessWidget {
-  const _SmartCameraView();
+  final CameraMode initialMode;
+  const _SmartCameraView({required this.initialMode});
 
   @override
   Widget build(BuildContext context) {
-    // Ẩn status bar để camera full screen
+    // Full screen immersive — như iOS native camera
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
     return Scaffold(
       backgroundColor: Colors.black,
       body: BlocConsumer<CameraBloc, CameraState>(
-        // BlocConsumer: lắng nghe navigation, đồng thời rebuild UI
         listener: (context, state) {
           if (state is PortraitAnalyzed || state is GarmentAnalyzed) {
-            // Khi phân tích xong → navigate sang Màn Hình 2
-            // Truyền cả state và bloc instance qua extra
+            // Phân tích xong → sang InteractionCanvas
             context.push('/canvas', extra: {
               'state': state,
               'bloc': context.read<CameraBloc>(),
@@ -64,28 +75,27 @@ class _SmartCameraView extends StatelessWidget {
             );
           }
         },
-        // BlocBuilder chỉ rebuild những phần cần thiết
-        buildWhen: (prev, curr) {
-          // Không rebuild khi chuyển sang trạng thái analyze (đã navigate)
-          return curr is! PortraitAnalyzed && curr is! GarmentAnalyzed;
-        },
+        buildWhen: (prev, curr) =>
+            curr is! PortraitAnalyzed && curr is! GarmentAnalyzed,
         builder: (context, state) {
           return Stack(
             fit: StackFit.expand,
             children: [
-              // ── 1. Camera Preview (KHÔNG bọc trong BlocBuilder riêng) ──
+              // ── 1. Camera Preview (full screen, tự nhiên) ──────────────
               _buildCameraLayer(context, state),
 
-              // ── 2. Overlay Guides (chỉ rebuild khi mode thay đổi) ──
-              _buildOverlayLayer(state),
+              // ── 2. UI Controls hoặc Preview Layer ───────────────────────
+              if (state is CapturePreview)
+                _buildPreviewLayer(context, state)
+              else
+                _buildControlsLayer(context, state),
 
-              // ── 3. UI Controls (top bar + bottom controls) ──────────────
-              _buildControlsLayer(context, state),
-
-              // ── 4. Loading spinner khi chụp ──────────────────────────────
-              if (state is CameraCapturing || state is CameraInitializing ||
-                  state is PortraitAnalyzing || state is GarmentAnalyzing)
-                _buildLoadingIndicator(state),
+              // ── 3. Loading khi đang chụp / phân tích ───────────────────
+              if (state is CameraCapturing ||
+                  state is CameraInitializing ||
+                  state is PortraitAnalyzing ||
+                  state is GarmentAnalyzing)
+                _buildLoadingOverlay(state),
             ],
           );
         },
@@ -104,33 +114,78 @@ class _SmartCameraView extends StatelessWidget {
     if (state is CameraError) {
       return _ErrorView(message: state.message);
     }
+    // Khi đang preview ảnh chụp, giữ khung màu đen (hoặc hiển thị camera đứng yên)
+    if (state is CapturePreview) {
+      return SizedBox.expand(
+        child: Image.file(
+          File(state.imagePath),
+          fit: BoxFit.cover,
+        ),
+      );
+    }
     return const ColoredBox(color: Colors.black);
   }
 
-  // ─── Overlay Layer (mode-dependent, shouldRepaint=false) ─────────────────
-  Widget _buildOverlayLayer(CameraState state) {
-    CameraMode mode = CameraMode.portrait;
-    if (state is CameraReady) mode = state.mode;
-
-    // BlocSelector để chỉ rebuild overlay khi mode thay đổi
-    return IgnorePointer(
-      child: mode == CameraMode.portrait
-          ? const HumanSilhouetteOverlay()
-          : const GarmentFrameOverlay(),
+  // ─── Preview Layer (Bước Xác Nhận Ảnh) ──────────────────────────────────
+  Widget _buildPreviewLayer(BuildContext context, CapturePreview state) {
+    return SafeArea(
+      child: Column(
+        children: [
+          const Spacer(),
+          // Bottom Bar
+          Container(
+            color: const Color(0xFF111111),
+            padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                GestureDetector(
+                  onTap: () => context.read<CameraBloc>().add(const RetakeCaptureEvent()),
+                  child: Text(
+                    'Chụp lại',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    if (state.mode == CameraMode.portrait) {
+                      context.read<CameraBloc>().add(const ConfirmPortraitEvent());
+                    } else {
+                      context.read<CameraBloc>().add(const ConfirmGarmentEvent());
+                    }
+                  },
+                  child: Text(
+                    'Sử dụng ảnh',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   // ─── Controls Layer ──────────────────────────────────────────────────────
   Widget _buildControlsLayer(BuildContext context, CameraState state) {
     final isReady = state is CameraReady;
-    final mode = isReady ? state.mode : CameraMode.portrait;
+    final mode = isReady ? state.mode : initialMode;
     final isFlashOn = isReady ? state.isFlashOn : false;
     final isFront = isReady ? state.isFrontCamera : false;
 
     return SafeArea(
       child: Column(
         children: [
-          // ── Top Bar ────────────────────────────────────────────────────
+          // ── Top Bar ──────────────────────────────────────────────────
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
             child: Row(
@@ -140,142 +195,148 @@ class _SmartCameraView extends StatelessWidget {
                 _CircleIconButton(
                   icon: Icons.close,
                   onTap: () {
-                    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+                    SystemChrome.setEnabledSystemUIMode(
+                        SystemUiMode.edgeToEdge);
                     context.pop();
                   },
                 ),
-                // Page indicator (1/3)
-                _PageIndicator(current: 0),
-                // Flash toggle
-                _CircleIconButton(
-                  icon: isFlashOn ? Icons.flash_on : Icons.flash_off,
-                  isActive: isFlashOn,
-                  onTap: isReady
-                      ? () => context.read<CameraBloc>().add(const ToggleFlashEvent())
-                      : null,
-                ),
+
+                // Label mode hiện tại
+                _ModeLabel(mode: mode),
+
+                // Flash toggle (chỉ hiện khi cam sau)
+                isFront
+                    ? SizedBox(width: 44.w) // Placeholder giữ cân đối
+                    : _CircleIconButton(
+                        icon: isFlashOn
+                            ? Icons.flash_on_rounded
+                            : Icons.flash_off_rounded,
+                        isActive: isFlashOn,
+                        onTap: isReady
+                            ? () => context
+                                .read<CameraBloc>()
+                                .add(const ToggleFlashEvent())
+                            : null,
+                      ),
               ],
             ),
           ),
 
           const Spacer(),
 
-          // ── Guide text ────────────────────────────────────────────────
-          _buildGuideText(mode),
+          // ── Tip nhỏ phía trên nút chụp ───────────────────────────────
+          _buildTipText(mode),
           SizedBox(height: 16.h),
 
-          // ── Mode Slider ───────────────────────────────────────────────
+          // ── Mode Switcher ─────────────────────────────────────────────
           BlocSelector<CameraBloc, CameraState, CameraMode>(
-            selector: (state) => state is CameraReady ? state.mode : CameraMode.portrait,
-            builder: (context, activeMode) => ModeSliderWidget(
+            selector: (s) =>
+                s is CameraReady ? s.mode : initialMode,
+            builder: (context, activeMode) => _ModeTabBar(
               activeMode: activeMode,
-              onModeChanged: (mode) =>
-                  context.read<CameraBloc>().add(SwitchCameraModeEvent(mode)),
+              onModeChanged: (m) =>
+                  context.read<CameraBloc>().add(SwitchCameraModeEvent(m)),
             ),
           ),
-          SizedBox(height: 24.h),
+          SizedBox(height: 28.h),
 
-          // ── Bottom Capture Controls ───────────────────────────────────
-          _buildCaptureControls(context, isReady, isFront),
-          SizedBox(height: 16.h),
-
-          // ── Tip dưới cùng ─────────────────────────────────────────────
-          _buildTipText(mode),
-          SizedBox(height: 24.h),
+          // ── Bottom: Gallery | Shutter | Flip ─────────────────────────
+          _buildCaptureRow(context, isReady, isFront),
+          SizedBox(height: 40.h),
         ],
       ),
     );
   }
 
-  Widget _buildGuideText(CameraMode mode) {
-    final text = mode == CameraMode.portrait
-        ? 'Đứng thẳng, đủ người trong khung'
-        : 'Đặt đồ vào khung';
+  Widget _buildTipText(CameraMode mode) {
+    final tip = mode == CameraMode.portrait
+        ? '📸 Chụp ảnh toàn thân, nền sáng'
+        : '👕 Đặt quần áo phẳng, nền trắng/sáng';
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.55),
+        color: Colors.black.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(20.r),
       ),
       child: Text(
-        text,
+        tip,
         style: TextStyle(
-          color: Colors.white,
-          fontSize: 14.sp,
-          fontWeight: FontWeight.w600,
+          color: Colors.white.withValues(alpha: 0.85),
+          fontSize: 13.sp,
         ),
       ),
     );
   }
 
-  Widget _buildCaptureControls(BuildContext context, bool isReady, bool isFront) {
+  Widget _buildCaptureRow(
+      BuildContext context, bool isReady, bool isFront) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Nút gallery
+        // Nút mở thư viện ảnh
         _CircleIconButton(
           icon: Icons.photo_library_outlined,
-          size: 52.w,
+          size: 50.w,
           onTap: isReady
-              ? () => context.read<CameraBloc>().add(const PickFromGalleryEvent())
+              ? () => context
+                  .read<CameraBloc>()
+                  .add(const PickFromGalleryEvent())
               : null,
         ),
 
-        // Nút chụp chính (lớn)
+        // Nút chụp chính (shutter) — to và nổi bật
         GestureDetector(
           onTap: isReady
-              ? () => context.read<CameraBloc>().add(const CapturePhotoEvent())
+              ? () =>
+                  context.read<CameraBloc>().add(const CapturePhotoEvent())
               : null,
           child: BlocSelector<CameraBloc, CameraState, CameraMode>(
-            selector: (s) => s is CameraReady ? s.mode : CameraMode.portrait,
-            builder: (_, mode) => _ShutterButton(isGarmentMode: mode == CameraMode.garment),
+            selector: (s) =>
+                s is CameraReady ? s.mode : CameraMode.portrait,
+            builder: (_, mode) => _ShutterButton(
+              isGarmentMode: mode == CameraMode.garment,
+            ),
           ),
         ),
 
         // Nút lật camera
         _CircleIconButton(
-          icon: Icons.flip_camera_ios_outlined,
-          size: 52.w,
+          icon: Icons.flip_camera_ios_rounded,
+          size: 50.w,
           onTap: isReady
-              ? () => context.read<CameraBloc>().add(const FlipCameraEvent())
+              ? () =>
+                  context.read<CameraBloc>().add(const FlipCameraEvent())
               : null,
         ),
       ],
     );
   }
 
-  Widget _buildTipText(CameraMode mode) {
-    final tip = mode == CameraMode.portrait
-        ? '💡 Chọn nền sáng, tránh ngược sáng để AI nhận diện tốt hơn'
-        : '💡 Nền trắng hoặc tường sáng giúp AI tách đồ chính xác hơn';
-
-    return Text(
-      tip,
-      textAlign: TextAlign.center,
-      style: TextStyle(
-        color: Colors.white60,
-        fontSize: 12.sp,
-      ),
-    );
-  }
-
-  Widget _buildLoadingIndicator(CameraState state) {
-    String message = 'Đang xử lý...';
-    if (state is PortraitAnalyzing) message = 'AI đang nhận diện cơ thể...';
-    if (state is GarmentAnalyzing) message = 'AI đang phân tích trang phục...';
+  Widget _buildLoadingOverlay(CameraState state) {
+    String msg = 'Đang xử lý...';
+    if (state is PortraitAnalyzing) msg = 'AI đang nhận diện cơ thể...';
+    if (state is GarmentAnalyzing) msg = 'AI đang phân tích trang phục...';
 
     return Container(
-      color: Colors.black.withOpacity(0.6),
+      color: Colors.black.withValues(alpha: 0.65),
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const CircularProgressIndicator(color: Color(0xFF4CAF50), strokeWidth: 2.5),
+            const CircularProgressIndicator(
+              color: Color(0xFF90553A),
+              strokeWidth: 2.5,
+            ),
             SizedBox(height: 16.h),
             Text(
-              message,
-              style: TextStyle(color: Colors.white, fontSize: 14.sp),
+              msg,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),
@@ -284,9 +345,9 @@ class _SmartCameraView extends StatelessWidget {
   }
 }
 
-// ─── Sub-widgets ─────────────────────────────────────────────────────────────
+// ─── Sub-widgets ──────────────────────────────────────────────────────────────
 
-/// CameraPreview widget tách riêng để tránh rebuild khi state khác thay đổi
+/// Camera preview — tách riêng tránh rebuild
 class _CameraPreviewWidget extends StatelessWidget {
   final CameraController controller;
   const _CameraPreviewWidget({required this.controller});
@@ -306,7 +367,135 @@ class _CameraPreviewWidget extends StatelessWidget {
   }
 }
 
-/// Nút tròn với icon
+/// Label hiển thị mode hiện tại (portrait / garment)
+class _ModeLabel extends StatelessWidget {
+  final CameraMode mode;
+  const _ModeLabel({required this.mode});
+
+  @override
+  Widget build(BuildContext context) {
+    final isPortrait = mode == CameraMode.portrait;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 6.h),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(20.r),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isPortrait ? Icons.person_outline : Icons.checkroom_outlined,
+            color: Colors.white,
+            size: 15.sp,
+          ),
+          SizedBox(width: 5.w),
+          Text(
+            isPortrait ? 'Chụp người' : 'Chụp quần áo',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 13.sp,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Tab chuyển mode dưới — thiết kế như iOS camera
+class _ModeTabBar extends StatelessWidget {
+  final CameraMode activeMode;
+  final ValueChanged<CameraMode> onModeChanged;
+
+  const _ModeTabBar({
+    required this.activeMode,
+    required this.onModeChanged,
+  });
+
+  static const _items = [
+    (mode: CameraMode.portrait, label: 'Chụp người'),
+    (mode: CameraMode.garment, label: 'Chụp quần áo'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: _items.map((item) {
+        final isActive = item.mode == activeMode;
+        return GestureDetector(
+          onTap: () => onModeChanged(item.mode),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeInOut,
+            margin: EdgeInsets.symmetric(horizontal: 8.w),
+            padding:
+                EdgeInsets.symmetric(horizontal: 18.w, vertical: 7.h),
+            decoration: BoxDecoration(
+              color: isActive
+                  ? Colors.white.withValues(alpha: 0.18)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(22.r),
+              border: Border.all(
+                color: isActive
+                    ? Colors.white.withValues(alpha: 0.7)
+                    : Colors.transparent,
+              ),
+            ),
+            child: Text(
+              item.label,
+              style: TextStyle(
+                color: isActive
+                    ? Colors.white
+                    : Colors.white.withValues(alpha: 0.5),
+                fontSize: 14.sp,
+                fontWeight:
+                    isActive ? FontWeight.w700 : FontWeight.w400,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+/// Nút chụp hình tròn lớn — trắng (portrait) / nâu accent (garment)
+class _ShutterButton extends StatelessWidget {
+  final bool isGarmentMode;
+  const _ShutterButton({required this.isGarmentMode});
+
+  @override
+  Widget build(BuildContext context) {
+    final innerColor =
+        isGarmentMode ? const Color(0xFF90553A) : Colors.white;
+    final outerColor = innerColor.withValues(alpha: 0.3);
+
+    return Container(
+      width: 78.w,
+      height: 78.w,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: outerColor,
+        border: Border.all(
+            color: innerColor.withValues(alpha: 0.8), width: 3),
+      ),
+      child: Center(
+        child: Container(
+          width: 60.w,
+          height: 60.w,
+          decoration:
+              BoxDecoration(shape: BoxShape.circle, color: innerColor),
+        ),
+      ),
+    );
+  }
+}
+
+/// Nút tròn nhỏ với icon
 class _CircleIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
@@ -329,7 +518,7 @@ class _CircleIconButton extends StatelessWidget {
         height: size.w,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.black.withOpacity(0.45),
+          color: Colors.black.withValues(alpha: 0.45),
           border: Border.all(
             color: isActive ? Colors.white : Colors.white24,
             width: 1,
@@ -337,67 +526,10 @@ class _CircleIconButton extends StatelessWidget {
         ),
         child: Icon(
           icon,
-          color: isActive ? const Color(0xFFF5A623) : Colors.white,
-          size: (size * 0.45).sp,
+          color: isActive ? const Color(0xFF90553A) : Colors.white,
+          size: (size * 0.46).sp,
         ),
       ),
-    );
-  }
-}
-
-/// Nút chụp chính (khác nhau giữa portrait=trắng và garment=vàng)
-class _ShutterButton extends StatelessWidget {
-  final bool isGarmentMode;
-  const _ShutterButton({required this.isGarmentMode});
-
-  @override
-  Widget build(BuildContext context) {
-    final inner = isGarmentMode ? const Color(0xFFF5A623) : Colors.white;
-    final outer = isGarmentMode
-        ? const Color(0xFFF5A623).withOpacity(0.35)
-        : Colors.white.withOpacity(0.35);
-
-    return Container(
-      width: 76.w,
-      height: 76.w,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: outer,
-        border: Border.all(color: inner.withOpacity(0.7), width: 3),
-      ),
-      child: Center(
-        child: Container(
-          width: 58.w,
-          height: 58.w,
-          decoration: BoxDecoration(shape: BoxShape.circle, color: inner),
-        ),
-      ),
-    );
-  }
-}
-
-/// Indicator "1/3" ở top center
-class _PageIndicator extends StatelessWidget {
-  final int current;
-  const _PageIndicator({required this.current});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(3, (i) {
-        final isActive = i == current;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          margin: EdgeInsets.symmetric(horizontal: 3.w),
-          width: isActive ? 20.w : 6.w,
-          height: 6.h,
-          decoration: BoxDecoration(
-            color: isActive ? Colors.white : Colors.white38,
-            borderRadius: BorderRadius.circular(3.r),
-          ),
-        );
-      }),
     );
   }
 }
@@ -417,21 +549,25 @@ class _ErrorView extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.camera_alt_outlined, color: Colors.white38, size: 64.sp),
+              Icon(Icons.camera_alt_outlined,
+                  color: Colors.white38, size: 64.sp),
               SizedBox(height: 16.h),
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white60, fontSize: 14.sp),
+                style:
+                    TextStyle(color: Colors.white60, fontSize: 14.sp),
               ),
               SizedBox(height: 20.h),
               ElevatedButton(
-                onPressed: () =>
-                    context.read<CameraBloc>().add(const InitCameraEvent()),
+                onPressed: () => context
+                    .read<CameraBloc>()
+                    .add(const InitCameraEvent()),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFF5A623),
+                  backgroundColor: const Color(0xFF90553A),
                 ),
-                child: const Text('Thử lại', style: TextStyle(color: Colors.black)),
+                child: const Text('Thử lại',
+                    style: TextStyle(color: Colors.white)),
               ),
             ],
           ),

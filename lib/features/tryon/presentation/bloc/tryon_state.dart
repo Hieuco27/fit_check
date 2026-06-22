@@ -16,40 +16,10 @@ class TryonInitial extends TryonState {
   const TryonInitial();
 }
 
-// ─── States mới cho luồng 3 màn hình ─────────────────────────────────────────
-
-/// AI đang xử lý ghép đồ — hiển thị checklist animation
-class TryOnProcessing extends TryonState {
-  /// Danh sách các bước xử lý AI
-  final List<String> steps;
-  /// Index bước đang xử lý hiện tại
-  final int currentStepIndex;
-
-  const TryOnProcessing({
-    this.steps = const [
-      'Nhận diện tư thế cơ thể',
-      'Tách nền quần áo',
-      'Căn chỉnh tỉ lệ & góc nhìn',
-      'Render kết quả cuối',
-    ],
-    this.currentStepIndex = 0,
-  });
-
-  TryOnProcessing copyWith({int? currentStepIndex}) {
-    return TryOnProcessing(
-      steps: steps,
-      currentStepIndex: currentStepIndex ?? this.currentStepIndex,
-    );
-  }
-
-  @override
-  List<Object?> get props => [currentStepIndex];
-}
-
 /// Kết quả try-on đã load xong
 class TryOnResultLoaded extends TryonState {
   final TryonSession session;
-  final bool showAfter;       // true = xem kết quả AI, false = ảnh gốc
+  final bool showAfter; // true = xem kết quả AI, false = ảnh gốc
   final List<GarmentVariant> availableVariants;
 
   const TryOnResultLoaded({
@@ -161,7 +131,12 @@ class TryOnSelecting extends TryonState {
   }
 
   @override
-  List<Object?> get props => [originalImagePath, activeCategory, availableItems, selectedItems];
+  List<Object?> get props => [
+    originalImagePath,
+    activeCategory,
+    availableItems,
+    selectedItems,
+  ];
 }
 
 class TryOnGenerating extends TryonState {

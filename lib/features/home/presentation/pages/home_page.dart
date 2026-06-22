@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:fit_check/features/closet/presentation/pages/closet_page.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+
+import 'package:fit_check/core/constants/app_colors.dart';
+import 'package:fit_check/features/closet/presentation/pages/closet_page.dart';
 import 'package:fit_check/features/home/presentation/bloc/home_bloc.dart';
 import 'package:fit_check/features/home/presentation/bloc/home_event.dart';
 import 'package:fit_check/features/home/presentation/bloc/home_state.dart';
-import 'package:fit_check/features/home/presentation/widgets/fitroom_header.dart';
+import 'package:fit_check/features/home/presentation/widgets/action_grid.dart';
+import 'package:fit_check/features/home/presentation/widgets/home_header.dart';
 import 'package:fit_check/features/home/presentation/widgets/home_nav_bar.dart';
-import 'package:fit_check/features/home/presentation/widgets/new_arrivals_section.dart';
-import 'package:fit_check/features/home/presentation/widgets/portrait_section.dart';
-import 'package:fit_check/features/home/presentation/widgets/section_title.dart';
-import 'package:fit_check/features/home/presentation/widgets/shop_section.dart';
-import 'package:fit_check/features/home/presentation/widgets/trending_section.dart';
-import 'package:fit_check/features/home/presentation/widgets/tryon_history_section.dart';
+import 'package:fit_check/features/home/presentation/widgets/recent_tries.dart';
+import 'package:fit_check/features/home/presentation/widgets/suggestion_card.dart';
 import 'package:fit_check/features/profile/presentation/pages/profile_page.dart';
 
 class HomePage extends StatelessWidget {
@@ -35,13 +34,17 @@ class _HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
+    // Dùng dark icons vì nền sáng (Light Theme)
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle.dark.copyWith(statusBarColor: Colors.transparent),
+    );
 
     return Scaffold(
       extendBody: true,
-      backgroundColor: const Color(0xFF0B0B0E),
+      backgroundColor: AppColors.homeBackground,
       bottomNavigationBar: BlocBuilder<HomeBloc, HomeState>(
         buildWhen: (previous, current) {
+          // Chỉ rebuild NavBar khi tab thay đổi
           if (previous is HomeLoaded && current is HomeLoaded) {
             return previous.activeTabIndex != current.activeTabIndex;
           }
@@ -63,8 +66,11 @@ class _HomeView extends StatelessWidget {
       body: BlocBuilder<HomeBloc, HomeState>(
         builder: (context, state) {
           if (state is HomeLoading || state is HomeInitial) {
-            return const Center(
-              child: CircularProgressIndicator(color: Color(0xFF7B2FFF)),
+            return Center(
+              child: CircularProgressIndicator(
+                color: AppColors.homeAccentBrown,
+                strokeWidth: 2.5,
+              ),
             );
           } else if (state is HomeLoaded) {
             return _buildBodyForTab(context, state);
@@ -72,7 +78,7 @@ class _HomeView extends StatelessWidget {
             return Center(
               child: Text(
                 state.message,
-                style: GoogleFonts.inter(color: Colors.red),
+                style: GoogleFonts.inter(color: AppColors.wardroRedText),
               ),
             );
           }
@@ -85,7 +91,7 @@ class _HomeView extends StatelessWidget {
   Widget _buildBodyForTab(BuildContext context, HomeLoaded state) {
     switch (state.activeTabIndex) {
       case 0:
-        return _buildHomeTab(context);
+        return _buildHomeTab(context, state);
       case 1:
         return const ClosetPage();
       case 2:
@@ -101,174 +107,137 @@ class _HomeView extends StatelessWidget {
     }
   }
 
-  //  HOME TAB — single scrollable page
-  Widget _buildHomeTab(BuildContext context) {
-    return Stack(
-      children: [
-        CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            // Status bar spacing
-            SliverToBoxAdapter(
-              child: SizedBox(height: MediaQuery.of(context).padding.top),
-            ),
-
-            // HEADER
-            SliverToBoxAdapter(
-              child: FitRoomHeader(onProTap: () {}, onSettingsTap: () {}),
-            ),
-
-            // ── SECTION 1: Ảnh chân dung của bạn ──
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.only(bottom: 10.h),
-                child: SectionTitle(
-                  title: 'Ảnh chân dung của bạn',
-                  showArrow: false,
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(child: PortraitSection()),
-
-            // ── SECTION 2: Thêm từ online shop ──
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.only(top: 24.h, bottom: 12.h),
-                child: SectionTitle(
-                  title: 'Thêm từ online shop',
-                  showArrow: false,
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(child: ShopSection()),
-
-            // ── SECTION 3: Đồ mới nhất ──
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.only(top: 24.h, bottom: 12.h),
-                child: SectionTitle(title: 'Đồ mới nhất ›', showArrow: false),
-              ),
-            ),
-            SliverToBoxAdapter(child: NewArrivalsSection()),
-
-            // ── SECTION 4: Phổ biến 🔥 ──
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.only(top: 24.h, bottom: 12.h),
-                child: SectionTitle(title: 'Phổ biến 🔥 ›', showArrow: false),
-              ),
-            ),
-            SliverToBoxAdapter(child: TrendingSection()),
-
-            // ── SECTION 5: Quần áo bạn đã thử ──
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.only(top: 24.h, bottom: 12.h),
-                child: SectionTitle(
-                  title: 'Quần áo bạn đã thử ›',
-                  showArrow: false,
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(child: TryonHistorySection()),
-
-            // Bottom padding so FAB doesn't cover last section
-            SliverToBoxAdapter(child: SizedBox(height: 150.h)),
-          ],
+  // ─────────────────────────────────────────────────────────────────────────
+  //  HOME TAB — Layout mới: Header → Action Grid → Recent Tries → Suggestion
+  // ─────────────────────────────────────────────────────────────────────────
+  Widget _buildHomeTab(BuildContext context, HomeLoaded state) {
+    return CustomScrollView(
+      physics: const BouncingScrollPhysics(),
+      slivers: [
+        // Khoảng cách status bar
+        SliverToBoxAdapter(
+          child: SizedBox(height: MediaQuery.of(context).padding.top + 8.h),
         ),
 
-        // ── FLOATING "Bắt đầu thử" BUTTON ──
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: _buildFloatingButton(context),
+        // ── HEADER: "FitCheck AI" + lời chào + avatar ──
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            child: HomeHeader(
+              userName: state.userName,
+              onNotificationTap: () {},
+              onProfileTap: () {},
+            ),
+          ),
         ),
+
+        SliverToBoxAdapter(child: SizedBox(height: 24.h)),
+
+        // ── ACTION GRID: 2×2 card chức năng ──
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            child: ActionGrid(
+              actions: state.actions,
+              onActionTap: (index) => _handleActionTap(context, index),
+            ),
+          ),
+        ),
+
+        SliverToBoxAdapter(child: SizedBox(height: 28.h)),
+
+        // ── RECENT TRIES: Thử gần đây ──
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            child: RecentTries(
+              recentTries: state.recentTries,
+              onItemTap: (index) {},
+              onSeeAllTap: () {},
+            ),
+          ),
+        ),
+
+        SliverToBoxAdapter(child: SizedBox(height: 20.h)),
+
+        // ── SUGGESTION BANNER: Gợi ý hôm nay ──
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.w),
+            child: SuggestionCard(
+              suggestion: state.dailySuggestion,
+              onTap: () {},
+            ),
+          ),
+        ),
+
+        // Khoảng padding cuối để NavBar không che nội dung
+        SliverToBoxAdapter(child: SizedBox(height: 120.h)),
       ],
     );
   }
 
-  Widget _buildFloatingButton(BuildContext context) {
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
-    final navBarHeight = 4.h + 4.h + bottomPadding;
-
-    return Container(
-      padding: EdgeInsets.only(
-        left: 24.w,
-        right: 24.w,
-        bottom: navBarHeight + 2.h,
-        top: 16.h,
-      ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.transparent,
-            const Color(0xFF0B0B0E).withValues(alpha: 0.95),
-            const Color(0xFF0B0B0E),
-          ],
-          stops: const [0.0, 0.35, 1.0],
-        ),
-      ),
-      child: GestureDetector(
-        onTap: () {
-          context.push('/camera');
-        },
-        child: Align(
-          alignment: Alignment.bottomRight,
-          child: Container(
-            width: 72.w,
-            height: 72.w,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Color(0xFFFDFCF9),
-            ),
-            child: Image.asset(
-              'assets/images/home/camera.png',
-              width: 72.w,
-              height: 72.w,
-              fit: BoxFit.contain,
-            ),
-          ),
-        ),
-      ),
-    );
+  void _handleActionTap(BuildContext context, int index) {
+    switch (index) {
+      case 0: // Chụp ảnh bạn → Portrait mode, cam trước (selfie)
+        context.push('/camera', extra: {
+          'mode': 'portrait',
+          'useFrontCamera': true,
+        });
+        break;
+      case 1: // Chụp quần áo → Garment mode, cam sau
+        context.push('/camera', extra: {
+          'mode': 'garment',
+          'useFrontCamera': false,
+        });
+        break;
+      case 2: // Thử đồ ngay — dùng ảnh có sẵn (TODO)
+        break;
+      case 3: // Tìm trong shop (TODO)
+        break;
+    }
   }
 
-  // ─────────────────────────────────────────────────────────
-  //  PLACEHOLDER SCREEN (other tabs)
-  // ─────────────────────────────────────────────────────────
+  //  PLACEHOLDER SCREEN (các tab chưa phát triển)
   Widget _buildPlaceholderScreen(
     BuildContext context,
     String title,
     IconData icon,
   ) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ShaderMask(
-            shaderCallback: (bounds) => const LinearGradient(
-              colors: [Color(0xFF7B2FFF), Color(0xFF00D4FF)],
-            ).createShader(bounds),
-            child: Icon(icon, size: 64.sp, color: Colors.white),
-          ),
-          SizedBox(height: 16.h),
-          Text(
-            title,
-            style: GoogleFonts.inter(
-              fontSize: 22.sp,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
+    return Container(
+      color: AppColors.homeBackground,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80.w,
+              height: 80.w,
+              decoration: BoxDecoration(
+                color: AppColors.homeAccentCream,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 40.sp, color: AppColors.homeAccentBrown),
             ),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            'Chức năng đang được phát triển...',
-            style: GoogleFonts.inter(fontSize: 14.sp, color: Colors.white38),
-          ),
-        ],
+            SizedBox(height: 16.h),
+            Text(
+              title,
+              style: GoogleFonts.inter(
+                fontSize: 22.sp,
+                fontWeight: FontWeight.w700,
+                color: AppColors.homeTextPrimary,
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              'Chức năng đang được phát triển...',
+              style: GoogleFonts.inter(
+                fontSize: 14.sp,
+                color: AppColors.homeTextSecondary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

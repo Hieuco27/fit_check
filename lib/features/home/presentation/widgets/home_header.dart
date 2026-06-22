@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:fit_check/core/constants/app_colors.dart';
-import 'package:fit_check/core/utils/text_styles.dart';
 
+/// Header trang Home — Light Theme Warm Brown
+/// Hiển thị: Logo "FitCheck AI" | nút thông báo | avatar
+/// Bên dưới: Lời chào + tiêu đề chính
 class HomeHeader extends StatelessWidget {
   final String userName;
   final VoidCallback? onBackTap;
@@ -22,46 +25,49 @@ class HomeHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Navigation row
+        // ── Row trên: Logo + Actions ──
         Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            // Logo "FitCheck AI"
             Text(
-              'Fit Check',
-              style: AppTextStyles.titleMedium(color: AppColors.brandPurple)
-                  .copyWith(
-                    fontSize: 22.sp,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.5,
-                  ),
+              'FitCheck AI',
+              style: GoogleFonts.inter(
+                fontSize: 20.sp,
+                fontWeight: FontWeight.w900,
+                color: AppColors.homeTextPrimary,
+                letterSpacing: 0.3,
+              ),
             ),
             const Spacer(),
-            // Notification Bell with Badge
+            // Nút thông báo
             GestureDetector(
               onTap: onNotificationTap ?? () {},
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
                   Container(
-                    width: 40.w,
-                    height: 40.w,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF1EAFF),
+                    width: 42.w,
+                    height: 42.w,
+                    decoration: BoxDecoration(
+                      color: AppColors.homeAccentCream,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Icons.notifications_outlined,
-                      color: const Color(0xFF1F1B2C),
+                      color: AppColors.homeTextPrimary,
                       size: 22.sp,
                     ),
                   ),
+                  // Badge đỏ thông báo
                   Positioned(
                     top: 2.w,
                     right: 2.w,
                     child: Container(
-                      width: 8.w,
-                      height: 8.w,
+                      width: 9.w,
+                      height: 9.w,
                       decoration: const BoxDecoration(
-                        color: Colors.red,
+                        color: AppColors.wardroRedText,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -69,28 +75,60 @@ class HomeHeader extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(width: 12.w),
-            // User Avatar
+            SizedBox(width: 10.w),
+            // Avatar người dùng
             GestureDetector(
               onTap: onProfileTap ?? () {},
-              child: CircleAvatar(
-                radius: 20.r,
-                backgroundImage: const NetworkImage(
-                  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+              child: Container(
+                width: 42.w,
+                height: 42.w,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppColors.homeAccentLight,
+                    width: 2,
+                  ),
+                ),
+                child: ClipOval(
+                  child: Image.network(
+                    'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: AppColors.homeAccentCream,
+                      child: Icon(
+                        Icons.person,
+                        color: AppColors.homeAccentBrown,
+                        size: 22.sp,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
           ],
         ),
-        SizedBox(height: 12.h),
-        // Greetings
+
+        SizedBox(height: 16.h),
+
+        // ── Lời chào + Tiêu đề chính ──
         Text(
-          'Chào bạn, $userName 👋',
-          style: AppTextStyles.labelLarge().copyWith(
-            color: const Color(0xFF7D7690),
+          'Chào lại, $userName 👋',
+          style: GoogleFonts.inter(
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w500,
+            color: AppColors.homeTextSecondary,
           ),
         ),
-        Text('Hôm nay mặc gì?', style: AppTextStyles.titleLarge().copyWith()),
+        SizedBox(height: 4.h),
+        Text(
+          'Hôm nay mặc gì?',
+          style: GoogleFonts.inter(
+            fontSize: 26.sp,
+            fontWeight: FontWeight.w800,
+            color: AppColors.homeTextPrimary,
+            height: 1.2,
+          ),
+        ),
       ],
     );
   }

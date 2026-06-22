@@ -12,10 +12,17 @@ abstract class CameraEvent extends Equatable {
 /// Khởi tạo camera controller
 class InitCameraEvent extends CameraEvent {
   final CameraMode initialMode;
-  const InitCameraEvent({this.initialMode = CameraMode.portrait});
+
+  /// true → mở cam trước (portrait/selfie), false → mở cam sau (garment)
+  final bool useFrontCamera;
+
+  const InitCameraEvent({
+    this.initialMode = CameraMode.portrait,
+    this.useFrontCamera = false,
+  });
 
   @override
-  List<Object?> get props => [initialMode];
+  List<Object?> get props => [initialMode, useFrontCamera];
 }
 
 /// Gạt thanh slider chuyển chế độ (Portrait ↔ Garment)

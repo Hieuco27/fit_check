@@ -14,67 +14,80 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
   void _onLoadHomeData(LoadHomeData event, Emitter<HomeState> emit) async {
     emit(const HomeLoading());
-    // Simulate minor delay for fetch simulation
     await Future.delayed(const Duration(milliseconds: 300));
 
+    // ── Mock Actions — màu theo bảng Warm Cream & Brown ──
     final mockActions = [
+      // Card 0: Primary — nâu đậm nổi bật nhất
       const HomeAction(
         title: 'Chụp ảnh bạn',
         subtitle: 'Cập nhật ảnh người',
         icon: Icons.person_add_alt_1_outlined,
-        iconColor: Color(0xFFA284FF),
-        iconBackgroundColor: Color(0xFF454354),
-        cardBackgroundColor: Color(0xFF2E2D38),
-        titleColor: Colors.white,
-        subtitleColor: Color(0xFFB0AEBC),
+        iconColor: Color(0xFFE8D5C0),       // kem nâu sáng
+        iconBackgroundColor: Color(0xFF5A3D2B), // nâu trung
+        cardBackgroundColor: Color(0xFF3D2B1F), // nâu đậm
+        titleColor: Color(0xFFFAF7F2),      // trắng kem
+        subtitleColor: Color(0xFFC8906A),   // nâu nhạt
       ),
+      // Card 1, 2, 3: Secondary — nền trắng, icon nâu
       const HomeAction(
         title: 'Chụp quần áo',
         subtitle: 'Thêm món đồ mới',
         icon: Icons.checkroom_outlined,
-        iconColor: Color(0xFF7B2CBF),
-        iconBackgroundColor: Color(0xFFEAE2FC),
-        cardBackgroundColor: Color(0xFFF3EFFF),
-        titleColor: Color(0xFF1C1A24),
-        subtitleColor: Color(0xFF7E7A8A),
+        iconColor: Color(0xFF90553A),       // nâu nhấn
+        iconBackgroundColor: Color(0xFFE8D5C0), // kem nâu
+        cardBackgroundColor: Color(0xFFFFFFFF), // trắng
+        titleColor: Color(0xFF1F150E),      // đen nâu
+        subtitleColor: Color(0xFF8A6E5A),   // nâu xám
       ),
       const HomeAction(
         title: 'Thử đồ ngay',
         subtitle: 'Dùng ảnh đã có',
         icon: Icons.auto_awesome_outlined,
-        iconColor: Color(0xFFB52CFE),
-        iconBackgroundColor: Color(0xFFF4EBFF),
-        cardBackgroundColor: Color(0xFFF7EFFF),
-        titleColor: Color(0xFF1C1A24),
-        subtitleColor: Color(0xFF7E7A8A),
+        iconColor: Color(0xFF90553A),
+        iconBackgroundColor: Color(0xFFE8D5C0),
+        cardBackgroundColor: Color(0xFFFFFFFF),
+        titleColor: Color(0xFF1F150E),
+        subtitleColor: Color(0xFF8A6E5A),
       ),
       const HomeAction(
         title: 'Tìm trong shop',
         subtitle: 'Duyệt sản phẩm',
         icon: Icons.search_outlined,
-        iconColor: Color(0xFFE65F2B),
-        iconBackgroundColor: Color(0xFFFFF1EB),
-        cardBackgroundColor: Color(0xFFFFF2EC),
-        titleColor: Color(0xFF1C1A24),
-        subtitleColor: Color(0xFF7E7A8A),
+        iconColor: Color(0xFF90553A),
+        iconBackgroundColor: Color(0xFFE8D5C0),
+        cardBackgroundColor: Color(0xFFFFFFFF),
+        titleColor: Color(0xFF1F150E),
+        subtitleColor: Color(0xFF8A6E5A),
       ),
     ];
 
+    // ── Mock Recent Tries — 3 items như trong thiết kế ──
     final mockRecentTries = [
       const RecentTry(
         title: 'Áo bomber',
         timeAgo: '2 ngày trước',
-        imageUrl: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&auto=format&fit=crop&q=80',
+        imageUrl:
+            'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&auto=format&fit=crop&q=80',
         isAiGenerated: true,
       ),
       const RecentTry(
         title: 'Váy midi',
         timeAgo: 'Hôm qua',
-        imageUrl: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&auto=format&fit=crop&q=80',
+        imageUrl:
+            'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&auto=format&fit=crop&q=80',
+        isAiGenerated: true,
+      ),
+      const RecentTry(
+        title: 'Jeans xanh',
+        timeAgo: '3 ngày trước',
+        imageUrl:
+            'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&auto=format&fit=crop&q=80',
         isAiGenerated: true,
       ),
     ];
 
+    // ── Mock Daily Suggestion ──
     const mockSuggestion = Suggestion(
       title: 'Gợi ý hôm nay',
       subtitle: 'Thử áo sơ mi trắng với quần của bạn!',
@@ -85,7 +98,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       actions: mockActions,
       recentTries: mockRecentTries,
       dailySuggestion: mockSuggestion,
-      activeTabIndex: 0, // Default to Studio/Home
+      activeTabIndex: 0,
     ));
   }
 

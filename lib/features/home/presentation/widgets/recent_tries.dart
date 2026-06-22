@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:fit_check/features/home/domain/entities/recent_try.dart';
 import 'package:fit_check/features/home/presentation/widgets/recent_try_card.dart';
-import 'package:fit_check/core/utils/text_styles.dart';
+import 'package:fit_check/core/constants/app_colors.dart';
 
+/// Section "Thử gần đây" — danh sách ngang với header có nút "Xem tất cả"
 class RecentTries extends StatelessWidget {
   final List<RecentTry> recentTries;
   final VoidCallback? onSeeAllTap;
@@ -21,15 +23,16 @@ class RecentTries extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header Row
+        // ── Header: Tiêu đề + "Xem tất cả" ──
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               'Thử gần đây',
-              style: AppTextStyles.titleMedium(color: const Color(0xFF1F1B2C)).copyWith(
+              style: GoogleFonts.inter(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.w800,
+                color: AppColors.homeTextPrimary,
               ),
             ),
             GestureDetector(
@@ -38,15 +41,16 @@ class RecentTries extends StatelessWidget {
                 children: [
                   Text(
                     'Xem tất cả',
-                    style: AppTextStyles.titleSmall2(color: const Color(0xFF7D7690)).copyWith(
+                    style: GoogleFonts.inter(
                       fontSize: 13.sp,
                       fontWeight: FontWeight.w500,
+                      color: AppColors.homeTextSecondary,
                     ),
                   ),
-                  SizedBox(width: 4.w),
+                  SizedBox(width: 3.w),
                   Icon(
                     Icons.arrow_forward,
-                    color: const Color(0xFF7D7690),
+                    color: AppColors.homeTextSecondary,
                     size: 14.sp,
                   ),
                 ],
@@ -54,18 +58,23 @@ class RecentTries extends StatelessWidget {
             ),
           ],
         ),
-        SizedBox(height: 12.h),
-        // Horizontal list
+
+        SizedBox(height: 14.h),
+
+        // ── Danh sách ngang cuộn — lazy render với ListView.builder ──
         SizedBox(
-          height: 195.h,
+          height: 190.h,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            // Không dùng padding ngang ở đây vì parent đã có padding 20.w
             itemCount: recentTries.length,
-            separatorBuilder: (context, index) => SizedBox(width: 16.w),
+            separatorBuilder: (context, index) => SizedBox(width: 14.w),
             itemBuilder: (context, index) {
               return RecentTryCard(
                 recentTry: recentTries[index],
                 onTap: () => onItemTap(index),
+                animationIndex: index, // Truyền index để stagger animation
               );
             },
           ),

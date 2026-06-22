@@ -12,6 +12,7 @@ class StoreLocation extends Equatable {
   final double price;
   final String size;
 
+
   const StoreLocation({
     required this.id,
     required this.name,

@@ -22,32 +22,6 @@ class AppColors {
   static const textPrimary = Color(0xFF000000);
   static const textSecondary = Color(0xFF6D6D71);
   static const border = Color(0xFFE5E5EA);
-  // nav bar
-  static const navBarColor = Color(0xFF2186FA);
-  static const navBarActiveColor = Color(0xFF2186FA);
-  static const navBarInactiveColor = Color(0xFF6D6D71);
-  static const navBarBackground = Color(0xFFE7E7E7);
-  // ── Light ──
-  static const lightBackground = Color(0xFFF5F5F5);
-  static const lightSurface = Color(0xFFFFFFFF);
-  static const lightTextPrimary = Color(0xFF1A1A1A);
-  static const lightTextSecondary = Color(0xFF757575);
-
-  // ── Dark ──
-  static const darkBackground = Color(0xFF0D1B2A);
-  static const darkSurface = Color(0xFF1A2C3D);
-  static const darkSurfaceAlt = Color(0xFF5C6875);
-  static const darkTextPrimary = Color(0xFFEEEEEE);
-  static const darkTextSecondary = Color(0xFF9E9E9E);
-
-  // ── Dark gradient (xanh than → xám trắng xanh) ──
-  static const darkGradientStart = Color(0xFF0D1B2A);
-  static const darkGradientEnd = Color(0xFF525B64);
-
-  // ── Dark navbar ──
-  static const darkNavBarBackground = Color(0xFF1A2C3D);
-  static const darkNavBarActive = Color(0xFF4FC3F7);
-  static const darkNavBarInactive = Color(0xFF607D8B);
 
   //  Chung (không đổi theo theme)
   static const primary1 = Color(0xFF2186FA);
@@ -83,4 +57,47 @@ class AppColors {
   static const fitTrueToSize = Color(0xFF4CAF50); // Vừa vặn
   static const fitTight = Color(0xFFF44336); // Quá chật
   static const fitLoose = Color(0xFFFF9800); // Quá rộng
+
+  // ── Home Light Theme — Warm Cream & Brown Palette ──
+  /// Nền trang chủ — trắng kem ấm
+  static const homeBackground = Color(0xFFFAF7F2);
+
+  /// Nền card thông thường — trắng tinh
+  static const homeSurface = Color(0xFFFFFFFF);
+
+  /// Nền card thứ cấp — kem nhạt
+  static const homeSurfaceAlt = Color(0xFFF1EBE0);
+
+  /// Card "Chụp ảnh bạn" — nâu đậm sang trọng (primary action)
+  static const homePrimaryCard = Color(0xFF3D2B1F);
+
+  /// Màu nâu nhấn chính (alias của wardroBrown)
+  static const homeAccentBrown = Color(0xFF90553A);
+
+  /// Nâu nhạt — icon accent, viền
+  static const homeAccentLight = Color(0xFFC8906A);
+
+  /// Kem nâu — fill nền icon, badge background
+  static const homeAccentCream = Color(0xFFE8D5C0);
+
+  /// Text đen nâu — tiêu đề, tên mục
+  static const homeTextPrimary = Color(0xFF1F150E);
+
+  /// Text nâu xám — phụ đề, time ago
+  static const homeTextSecondary = Color(0xFF8A6E5A);
+
+  /// Text trên nền card tối (nâu đậm)
+  static const homeTextOnDark = Color(0xFFFAF7F2);
+
+  /// Đường kẻ, divider nhạt
+  static const homeDivider = Color(0xFFEDE0D4);
+
+  /// Nền badge AI — nâu đậm
+  static const homeAiBadgeBg = Color(0xFF3D2B1F);
+
+  /// Nền banner "Gợi ý hôm nay" — vàng kem ấm
+  static const homeSuggestionBg = Color(0xFFFFF8F0);
+
+  /// Viền dashed banner gợi ý — nâu mật ong
+  static const homeSuggestionBorder = Color(0xFFD4AA88);
 }

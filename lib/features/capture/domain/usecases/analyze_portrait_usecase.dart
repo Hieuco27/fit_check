@@ -13,3 +13,5 @@ class AnalyzePortraitUseCase {
     return _repository.analyzePortrait(imagePath);
   }
 }
+
+

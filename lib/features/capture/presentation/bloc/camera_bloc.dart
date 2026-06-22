@@ -27,9 +27,9 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
   CameraBloc({
     required AnalyzePortraitUseCase analyzePortrait,
     required AnalyzeGarmentUseCase analyzeGarment,
-  })  : _analyzePortrait = analyzePortrait,
-        _analyzeGarment = analyzeGarment,
-        super(const CameraInitial()) {
+  }) : _analyzePortrait = analyzePortrait,
+       _analyzeGarment = analyzeGarment,
+       super(const CameraInitial()) {
     on<InitCameraEvent>(_onInitCamera);
     on<SwitchCameraModeEvent>(_onSwitchMode);
     on<CapturePhotoEvent>(_onCapturePhoto);
@@ -44,7 +44,7 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
     on<SelectBodyZoneEvent>(_onSelectBodyZone);
   }
 
-  // ─── Init Camera ────────────────────────────────────────────────────────────
+  // Init Camera
   Future<void> _onInitCamera(
     InitCameraEvent event,
     Emitter<CameraState> emit,
@@ -56,13 +56,35 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
         emit(const CameraError('Không tìm thấy camera trên thiết bị'));
         return;
       }
-      // Mặc định: cam sau (index 0 thường là cam sau)
-      _currentCameraIndex = 0;
+
+      // Chọn camera theo yêu cầu từ Home:
+      // Portrait mode → cam trước (selfie), Garment mode → cam sau
+      if (event.useFrontCamera && _cameras.length > 1) {
+        // Tìm front camera (lens facing front)
+        final frontIndex = _cameras.indexWhere(
+          (c) => c.lensDirection == CameraLensDirection.front,
+        );
+        _currentCameraIndex = frontIndex >= 0 ? frontIndex : 0;
+      } else {
+        // Tìm rear camera (lens facing back)
+        final backIndex = _cameras.indexWhere(
+          (c) => c.lensDirection == CameraLensDirection.back,
+        );
+        _currentCameraIndex = backIndex >= 0 ? backIndex : 0;
+      }
+
+      final isFront =
+          _cameras[_currentCameraIndex].lensDirection ==
+          CameraLensDirection.front;
+
       await _initController(_cameras[_currentCameraIndex]);
-      emit(CameraReady(
-        controller: _cameraController!,
-        mode: event.initialMode,
-      ));
+      emit(
+        CameraReady(
+          controller: _cameraController!,
+          mode: event.initialMode,
+          isFrontCamera: isFront,
+        ),
+      );
     } catch (e) {
       emit(CameraError('Không thể khởi động camera: ${e.toString()}'));
     }
@@ -76,17 +98,14 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
     _cameraController = CameraController(
       camera,
       ResolutionPreset.high, // Đủ chất lượng cho AI, không quá nặng
-      enableAudio: false,     // Không cần audio cho camera chụp ảnh
+      enableAudio: false, // Không cần audio cho camera chụp ảnh
       imageFormatGroup: ImageFormatGroup.jpeg,
     );
     await _cameraController!.initialize();
   }
 
   // ─── Switch Mode ─────────────────────────────────────────────────────────────
-  void _onSwitchMode(
-    SwitchCameraModeEvent event,
-    Emitter<CameraState> emit,
-  ) {
+  void _onSwitchMode(SwitchCameraModeEvent event, Emitter<CameraState> emit) {
     final current = state;
     if (current is CameraReady) {
       // Chỉ update mode, không rebuild camera controller → không bị flicker
@@ -110,15 +129,8 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
 
     try {
       final xFile = await _cameraController!.takePicture();
-      // Emit preview trước, sau đó tự động trigger phân tích AI
+      // Emit preview, KHÔNG tự động phân tích AI nữa (chờ user xác nhận)
       emit(CapturePreview(imagePath: xFile.path, mode: mode));
-
-      // Tự động trigger AI phân tích
-      if (mode == CameraMode.portrait) {
-        add(AnalyzePortraitEvent(xFile.path));
-      } else {
-        add(AnalyzeGarmentEvent(xFile.path));
-      }
     } catch (e) {
       emit(CameraError('Chụp ảnh thất bại: ${e.toString()}'));
       // Khôi phục về Ready
@@ -139,20 +151,13 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
       final xFile = await _imagePicker.pickImage(
         source: ImageSource.gallery,
         imageQuality: 85, // Giảm dung lượng để upload nhanh hơn
-        maxWidth: 1080,   // Giới hạn kích thước để tối ưu bộ nhớ
+        maxWidth: 1080, // Giới hạn kích thước để tối ưu bộ nhớ
         maxHeight: 1920,
       );
 
       if (xFile == null) return; // Người dùng hủy
 
       emit(CapturePreview(imagePath: xFile.path, mode: mode));
-
-      // Tự động trigger AI
-      if (mode == CameraMode.portrait) {
-        add(AnalyzePortraitEvent(xFile.path));
-      } else {
-        add(AnalyzeGarmentEvent(xFile.path));
-      }
     } catch (e) {
       emit(CameraError('Không thể mở thư viện ảnh: ${e.toString()}'));
     }
@@ -172,10 +177,9 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
 
     try {
       await _initController(_cameras[_currentCameraIndex]);
-      emit(current.copyWith(
-        controller: _cameraController,
-        isFrontCamera: isFront,
-      ));
+      emit(
+        current.copyWith(controller: _cameraController, isFrontCamera: isFront),
+      );
     } catch (e) {
       emit(CameraError('Không thể chuyển camera: ${e.toString()}'));
     }
@@ -208,10 +212,9 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
     emit(PortraitAnalyzing(event.imagePath));
     try {
       final bodyProfile = await _analyzePortrait(event.imagePath);
-      emit(PortraitAnalyzed(
-        imagePath: event.imagePath,
-        bodyProfile: bodyProfile,
-      ));
+      emit(
+        PortraitAnalyzed(imagePath: event.imagePath, bodyProfile: bodyProfile),
+      );
     } catch (e) {
       emit(CameraError('Phân tích ảnh thất bại: ${e.toString()}'));
     }
@@ -259,22 +262,19 @@ class CameraBloc extends Bloc<CameraEvent, CameraState> {
     ConfirmPortraitEvent event,
     Emitter<CameraState> emit,
   ) {
-    // Navigation được xử lý ở View layer bằng BlocListener
-    // State hiện tại (PortraitAnalyzed) vẫn giữ nguyên để View đọc dữ liệu
+    if (state is CapturePreview) {
+      add(AnalyzePortraitEvent((state as CapturePreview).imagePath));
+    }
   }
 
-  void _onConfirmGarment(
-    ConfirmGarmentEvent event,
-    Emitter<CameraState> emit,
-  ) {
-    // Navigation được xử lý ở View layer bằng BlocListener
+  void _onConfirmGarment(ConfirmGarmentEvent event, Emitter<CameraState> emit) {
+    if (state is CapturePreview) {
+      add(AnalyzeGarmentEvent((state as CapturePreview).imagePath));
+    }
   }
 
   // ─── Select Body Zone ─────────────────────────────────────────────────────────
-  void _onSelectBodyZone(
-    SelectBodyZoneEvent event,
-    Emitter<CameraState> emit,
-  ) {
+  void _onSelectBodyZone(SelectBodyZoneEvent event, Emitter<CameraState> emit) {
     final current = state;
     if (current is PortraitAnalyzed) {
       // Highlight vùng được chọn trước khi navigate

@@ -134,19 +134,19 @@ class _ClosetPageState extends State<ClosetPage> {
       // 5. FLOATING ACTION BUTTON (FAB)
       floatingActionButton: Padding(
         padding: EdgeInsets.only(
-          bottom: 80.h,
+          bottom: 60.h,
         ), // Push above the custom Home Nav Bar
         child: Container(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: const LinearGradient(
-              colors: [Color(0xFF7B2FFF), Color(0xFF00D4FF)],
+              colors: [Colors.blueAccent, Colors.blueAccent],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF7B2FFF).withValues(alpha: 0.4),
+                color: Colors.blueAccent.withValues(alpha: 0.4),
                 blurRadius: 16,
                 offset: const Offset(0, 4),
               ),

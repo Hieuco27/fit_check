@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:fit_check/features/capture/domain/entities/captured_image.dart';
+import 'package:fit_check/features/capture/domain/entities/garment_scan.dart';
 import 'package:fit_check/features/capture/presentation/bloc/camera_bloc.dart';
+import 'package:fit_check/features/capture/presentation/bloc/portrait_picker_bloc.dart';
+import 'package:fit_check/features/capture/presentation/bloc/portrait_picker_event.dart';
 import 'package:fit_check/features/auth/presentation/pages/splash_page.dart';
 import 'package:fit_check/features/auth/presentation/pages/login_page.dart';
 import 'package:fit_check/features/auth/presentation/pages/register_page.dart';
 import 'package:fit_check/features/capture/presentation/pages/interaction_canvas_page.dart';
+import 'package:fit_check/features/capture/presentation/pages/portrait_picker_page.dart';
 import 'package:fit_check/features/capture/presentation/pages/smart_camera_page.dart';
 import 'package:fit_check/features/home/presentation/pages/home_page.dart';
 import 'package:fit_check/features/tryon/domain/entities/garment_variant.dart';
@@ -25,29 +30,39 @@ class AppRouter {
       ),
       GoRoute(path: '/home', builder: (context, state) => const HomePage()),
 
-      // ── Tính năng Camera mới ─────────────────────────────────────────────
+      // ── Camera — Nhận initialMode và useFrontCamera từ extra ────────────
       GoRoute(
         path: '/camera',
-        builder: (context, state) => const SmartCameraPage(),
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+
+          // Đọc mode từ extra, mặc định portrait
+          final modeStr = extra?['mode'] as String? ?? 'portrait';
+          final initialMode = modeStr == 'garment'
+              ? CameraMode.garment
+              : CameraMode.portrait;
+
+          // Đọc camera facing, mặc định cam sau
+          final useFrontCamera = extra?['useFrontCamera'] as bool? ?? false;
+
+          return SmartCameraPage(
+            initialMode: initialMode,
+            useFrontCamera: useFrontCamera,
+          );
+        },
         routes: [
-          // /camera/canvas — Màn Hình 2 (reuse CameraBloc từ /camera)
-          // CameraBloc được cung cấp từ SmartCameraPage, truyền xuống qua BlocProvider
+          // /camera/canvas — Màn hình 2 (reuse CameraBloc từ SmartCameraPage)
           GoRoute(
             path: 'canvas',
-            builder: (context, state) {
-              // CameraBloc được reuse qua context (SmartCameraPage cung cấp)
-              return const InteractionCanvasPage();
-            },
+            builder: (context, state) => const InteractionCanvasPage(),
           ),
         ],
       ),
 
-      // /canvas — Route độc lập khi navigate từ SmartCameraPage bằng context.push('/canvas')
-      // Cần wrap với BlocProvider để reuse CameraBloc
+      // /canvas — Route độc lập (navigate từ SmartCameraPage qua context.push)
       GoRoute(
         path: '/canvas',
         builder: (context, state) {
-          // CameraBloc phải được cung cấp bởi parent (SmartCameraPage) thông qua extra
           final extra = state.extra as Map<String, dynamic>?;
           if (extra != null && extra.containsKey('bloc')) {
             return BlocProvider<CameraBloc>.value(
@@ -55,50 +70,50 @@ class AppRouter {
               child: const InteractionCanvasPage(),
             );
           }
-          // Fallback an toàn (nếu lỡ navigate trực tiếp không qua SmartCameraPage)
           return const Scaffold(
-            body: Center(
-              child: Text('Error: CameraBloc not found in route extra'),
-            ),
+            body: Center(child: Text('Error: CameraBloc not provided')),
           );
         },
       ),
 
-      // ── Try-On Result — Màn Hình 3 ──────────────────────────────────────
+      // ── Portrait Picker — Chọn chân dung sau khi chụp quần áo ───────────
+      GoRoute(
+        path: '/portrait-picker',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>? ?? {};
+          final garmentScan = extra['garmentScan'] as GarmentScan?;
+
+          return BlocProvider(
+            create: (_) => PortraitPickerBloc()..add(const LoadPickerData()),
+            child: PortraitPickerPage(garmentScan: garmentScan),
+          );
+        },
+      ),
+
+      // ── Try-On Result — Màn hình kết quả ──────────────────────────────
       GoRoute(
         path: '/tryon/result',
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>? ?? {};
-          final portraitPath =
-              extra['portraitImagePath'] as String? ??
-              'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600';
-          final garmentPath =
-              extra['garmentImagePath'] as String? ??
-              'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600';
-          final variant =
-              extra['initialVariant'] as GarmentVariant? ??
-              const GarmentVariant(
-                id: 2,
-                size: 'M',
-                colorHex: 'FFFFFF',
-                colorName: 'Trắng',
-                price: 299000,
-                stockCount: 10,
-              );
-
+          final portraitPath = extra['portraitImagePath'] as String? ??
+              'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=600';
+          final garmentPath = extra['garmentImagePath'] as String? ??
+              'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=600';
+          
           return TryOnResultPage(
             portraitImagePath: portraitPath,
             garmentImagePath: garmentPath,
-            initialVariant: variant,
           );
         },
       ),
 
-      // Legacy route (giữ để backward compat)
+      // Legacy redirect
       GoRoute(
         path: '/tryon',
-        builder: (context, state) =>
-            const SmartCameraPage(), // Redirect sang camera mới
+        builder: (context, state) => SmartCameraPage(
+          initialMode: CameraMode.garment,
+          useFrontCamera: false,
+        ),
       ),
     ],
   );
