@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:fit_check/core/constants/app_colors.dart';
 
 class CustomGradientTabBar extends StatelessWidget {
   final int activeIndex;
@@ -19,7 +20,7 @@ class CustomGradientTabBar extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: Color(0xFF1E1E24), width: 1.5),
+          bottom: BorderSide(color: AppColors.homeDivider, width: 1.5),
         ),
       ),
       child: Row(
@@ -42,7 +43,7 @@ class CustomGradientTabBar extends StatelessWidget {
                         fontWeight: isActive
                             ? FontWeight.w700
                             : FontWeight.w600,
-                        color: isActive ? Colors.white : Colors.white54,
+                        color: isActive ? AppColors.homePrimaryCard : AppColors.homeTextSecondary,
                       ),
                     ),
                   ),
@@ -52,24 +53,11 @@ class CustomGradientTabBar extends StatelessWidget {
                       height: 3.h,
                       width: 60.w, // Match the sketch width
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF7B2FFF), Color(0xFF00D4FF)],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
+                        color: AppColors.homePrimaryCard,
                         borderRadius: BorderRadius.only(
                           topLeft: Radius.circular(3.r),
                           topRight: Radius.circular(3.r),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(
-                              0xFF00D4FF,
-                            ).withValues(alpha: 0.5),
-                            blurRadius: 8,
-                            offset: const Offset(0, -1),
-                          ),
-                        ],
                       ),
                     )
                   else

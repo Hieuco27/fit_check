@@ -7,11 +7,14 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fit_check/features/capture/data/repositories/capture_repository_impl.dart';
 import 'package:fit_check/features/capture/domain/entities/captured_image.dart';
+import 'package:fit_check/features/capture/domain/entities/garment_scan.dart';
 import 'package:fit_check/features/capture/domain/usecases/analyze_garment_usecase.dart';
 import 'package:fit_check/features/capture/domain/usecases/analyze_portrait_usecase.dart';
 import 'package:fit_check/features/capture/presentation/bloc/camera_bloc.dart';
 import 'package:fit_check/features/capture/presentation/bloc/camera_event.dart';
 import 'package:fit_check/features/capture/presentation/bloc/camera_state.dart';
+import 'package:fit_check/features/tryon/data/repositories/tryon_repository_impl.dart';
+import 'package:fit_check/features/tryon/domain/entities/garment_variant.dart';
 
 /// Màn Hình Camera — giao diện chụp ảnh tự nhiên như iOS/Android
 /// Không còn khung guide overlay — chụp ảnh bình thường
@@ -23,31 +26,43 @@ class SmartCameraPage extends StatelessWidget {
   /// false → mở cam sau mặc định (garment)
   final bool useFrontCamera;
 
+  /// Có giá trị khi mở camera selfie sau khi user đã chụp/chọn quần áo.
+  final GarmentScan? garmentScanForTryOn;
+
   const SmartCameraPage({
     super.key,
     this.initialMode = CameraMode.portrait,
     this.useFrontCamera = false,
+    this.garmentScanForTryOn,
   });
 
   @override
   Widget build(BuildContext context) {
     final repo = CaptureRepositoryImpl();
     return BlocProvider(
-      create: (_) => CameraBloc(
-        analyzePortrait: AnalyzePortraitUseCase(repo),
-        analyzeGarment: AnalyzeGarmentUseCase(repo),
-      )..add(InitCameraEvent(
-          initialMode: initialMode,
-          useFrontCamera: useFrontCamera,
-        )),
-      child: _SmartCameraView(initialMode: initialMode),
+      create: (_) =>
+          CameraBloc(
+            analyzePortrait: AnalyzePortraitUseCase(repo),
+            analyzeGarment: AnalyzeGarmentUseCase(repo),
+          )..add(
+            InitCameraEvent(
+              initialMode: initialMode,
+              useFrontCamera: useFrontCamera,
+            ),
+          ),
+      child: _SmartCameraView(
+        initialMode: initialMode,
+        garmentScanForTryOn: garmentScanForTryOn,
+      ),
     );
   }
 }
 
 class _SmartCameraView extends StatelessWidget {
   final CameraMode initialMode;
-  const _SmartCameraView({required this.initialMode});
+  final GarmentScan? garmentScanForTryOn;
+
+  const _SmartCameraView({required this.initialMode, this.garmentScanForTryOn});
 
   @override
   Widget build(BuildContext context) {
@@ -58,12 +73,30 @@ class _SmartCameraView extends StatelessWidget {
       backgroundColor: Colors.black,
       body: BlocConsumer<CameraBloc, CameraState>(
         listener: (context, state) {
-          if (state is PortraitAnalyzed || state is GarmentAnalyzed) {
-            // Phân tích xong → sang InteractionCanvas
-            context.push('/canvas', extra: {
-              'state': state,
-              'bloc': context.read<CameraBloc>(),
-            });
+          if (state is PortraitAnalyzed) {
+            final garmentScan = garmentScanForTryOn;
+            if (garmentScan != null) {
+              _processTryOnAndOpenCanvas(
+                context,
+                portraitPath: state.imagePath,
+                garmentPath:
+                    garmentScan.removedBgImagePath ?? garmentScan.imagePath,
+              );
+              return;
+            }
+
+            // Chụp chân dung từ luồng chính → sang canvas chọn quần áo
+            context.push(
+              '/canvas',
+              extra: {'state': state, 'bloc': context.read<CameraBloc>()},
+            );
+          }
+          if (state is GarmentAnalyzed) {
+            // Chụp quần áo xong → bắt user chọn model hệ thống hoặc chụp chân dung.
+            context.push(
+              '/portrait-picker',
+              extra: {'garmentScan': state.garmentScan},
+            );
           }
           if (state is CameraError) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -81,16 +114,16 @@ class _SmartCameraView extends StatelessWidget {
           return Stack(
             fit: StackFit.expand,
             children: [
-              // ── 1. Camera Preview (full screen, tự nhiên) ──────────────
+              // ── 1. Camera Preview (full screen, tự nhiên) 
               _buildCameraLayer(context, state),
 
-              // ── 2. UI Controls hoặc Preview Layer ───────────────────────
+              // ── 2. UI Controls hoặc Preview Layer 
               if (state is CapturePreview)
                 _buildPreviewLayer(context, state)
               else
                 _buildControlsLayer(context, state),
 
-              // ── 3. Loading khi đang chụp / phân tích ───────────────────
+              // ── 3. Loading khi đang chụp / phân tích 
               if (state is CameraCapturing ||
                   state is CameraInitializing ||
                   state is PortraitAnalyzing ||
@@ -101,6 +134,73 @@ class _SmartCameraView extends StatelessWidget {
         },
       ),
     );
+  }
+
+  Future<void> _processTryOnAndOpenCanvas(
+    BuildContext context, {
+    required String portraitPath,
+    required String garmentPath,
+  }) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E1E1E),
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: Colors.white12),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(
+                color: Color(0xFF90553A),
+                strokeWidth: 3,
+              ),
+              SizedBox(height: 24.h),
+              Text(
+                'Đang ướm thử trang phục...',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final session = await TryonRepositoryImpl().submitTryOn(
+      portraitImagePath: portraitPath,
+      garmentImagePath: garmentPath,
+      variant: const GarmentVariant(
+        id: 1,
+        size: 'M',
+        colorHex: 'FFFFFF',
+        colorName: 'Trắng',
+        price: 299000,
+        stockCount: 10,
+      ),
+    );
+
+    if (context.mounted) {
+      Navigator.of(context).pop();
+      context.push(
+        '/canvas',
+        extra: {
+          'portraitImagePath': portraitPath,
+          'garmentImagePath': garmentPath,
+          'resultImagePath': session.resultImagePath,
+        },
+      );
+    }
   }
 
   // ─── Camera Preview Layer ─────────────────────────────────────────────────
@@ -117,10 +217,7 @@ class _SmartCameraView extends StatelessWidget {
     // Khi đang preview ảnh chụp, giữ khung màu đen (hoặc hiển thị camera đứng yên)
     if (state is CapturePreview) {
       return SizedBox.expand(
-        child: Image.file(
-          File(state.imagePath),
-          fit: BoxFit.cover,
-        ),
+        child: Image.file(File(state.imagePath), fit: BoxFit.cover),
       );
     }
     return const ColoredBox(color: Colors.black);
@@ -140,7 +237,9 @@ class _SmartCameraView extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 GestureDetector(
-                  onTap: () => context.read<CameraBloc>().add(const RetakeCaptureEvent()),
+                  onTap: () => context.read<CameraBloc>().add(
+                    const RetakeCaptureEvent(),
+                  ),
                   child: Text(
                     'Chụp lại',
                     style: TextStyle(
@@ -153,9 +252,13 @@ class _SmartCameraView extends StatelessWidget {
                 GestureDetector(
                   onTap: () {
                     if (state.mode == CameraMode.portrait) {
-                      context.read<CameraBloc>().add(const ConfirmPortraitEvent());
+                      context.read<CameraBloc>().add(
+                        const ConfirmPortraitEvent(),
+                      );
                     } else {
-                      context.read<CameraBloc>().add(const ConfirmGarmentEvent());
+                      context.read<CameraBloc>().add(
+                        const ConfirmGarmentEvent(),
+                      );
                     }
                   },
                   child: Text(
@@ -196,7 +299,8 @@ class _SmartCameraView extends StatelessWidget {
                   icon: Icons.close,
                   onTap: () {
                     SystemChrome.setEnabledSystemUIMode(
-                        SystemUiMode.edgeToEdge);
+                      SystemUiMode.edgeToEdge,
+                    );
                     context.pop();
                   },
                 ),
@@ -213,9 +317,9 @@ class _SmartCameraView extends StatelessWidget {
                             : Icons.flash_off_rounded,
                         isActive: isFlashOn,
                         onTap: isReady
-                            ? () => context
-                                .read<CameraBloc>()
-                                .add(const ToggleFlashEvent())
+                            ? () => context.read<CameraBloc>().add(
+                                const ToggleFlashEvent(),
+                              )
                             : null,
                       ),
               ],
@@ -230,8 +334,7 @@ class _SmartCameraView extends StatelessWidget {
 
           // ── Mode Switcher ─────────────────────────────────────────────
           BlocSelector<CameraBloc, CameraState, CameraMode>(
-            selector: (s) =>
-                s is CameraReady ? s.mode : initialMode,
+            selector: (s) => s is CameraReady ? s.mode : initialMode,
             builder: (context, activeMode) => _ModeTabBar(
               activeMode: activeMode,
               onModeChanged: (m) =>
@@ -269,8 +372,7 @@ class _SmartCameraView extends StatelessWidget {
     );
   }
 
-  Widget _buildCaptureRow(
-      BuildContext context, bool isReady, bool isFront) {
+  Widget _buildCaptureRow(BuildContext context, bool isReady, bool isFront) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -280,24 +382,20 @@ class _SmartCameraView extends StatelessWidget {
           icon: Icons.photo_library_outlined,
           size: 50.w,
           onTap: isReady
-              ? () => context
-                  .read<CameraBloc>()
-                  .add(const PickFromGalleryEvent())
+              ? () =>
+                    context.read<CameraBloc>().add(const PickFromGalleryEvent())
               : null,
         ),
 
         // Nút chụp chính (shutter) — to và nổi bật
         GestureDetector(
           onTap: isReady
-              ? () =>
-                  context.read<CameraBloc>().add(const CapturePhotoEvent())
+              ? () => context.read<CameraBloc>().add(const CapturePhotoEvent())
               : null,
           child: BlocSelector<CameraBloc, CameraState, CameraMode>(
-            selector: (s) =>
-                s is CameraReady ? s.mode : CameraMode.portrait,
-            builder: (_, mode) => _ShutterButton(
-              isGarmentMode: mode == CameraMode.garment,
-            ),
+            selector: (s) => s is CameraReady ? s.mode : CameraMode.portrait,
+            builder: (_, mode) =>
+                _ShutterButton(isGarmentMode: mode == CameraMode.garment),
           ),
         ),
 
@@ -306,8 +404,7 @@ class _SmartCameraView extends StatelessWidget {
           icon: Icons.flip_camera_ios_rounded,
           size: 50.w,
           onTap: isReady
-              ? () =>
-                  context.read<CameraBloc>().add(const FlipCameraEvent())
+              ? () => context.read<CameraBloc>().add(const FlipCameraEvent())
               : null,
         ),
       ],
@@ -410,10 +507,7 @@ class _ModeTabBar extends StatelessWidget {
   final CameraMode activeMode;
   final ValueChanged<CameraMode> onModeChanged;
 
-  const _ModeTabBar({
-    required this.activeMode,
-    required this.onModeChanged,
-  });
+  const _ModeTabBar({required this.activeMode, required this.onModeChanged});
 
   static const _items = [
     (mode: CameraMode.portrait, label: 'Chụp người'),
@@ -432,8 +526,7 @@ class _ModeTabBar extends StatelessWidget {
             duration: const Duration(milliseconds: 220),
             curve: Curves.easeInOut,
             margin: EdgeInsets.symmetric(horizontal: 8.w),
-            padding:
-                EdgeInsets.symmetric(horizontal: 18.w, vertical: 7.h),
+            padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 7.h),
             decoration: BoxDecoration(
               color: isActive
                   ? Colors.white.withValues(alpha: 0.18)
@@ -452,8 +545,7 @@ class _ModeTabBar extends StatelessWidget {
                     ? Colors.white
                     : Colors.white.withValues(alpha: 0.5),
                 fontSize: 14.sp,
-                fontWeight:
-                    isActive ? FontWeight.w700 : FontWeight.w400,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
               ),
             ),
           ),
@@ -470,8 +562,7 @@ class _ShutterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final innerColor =
-        isGarmentMode ? const Color(0xFF90553A) : Colors.white;
+    final innerColor = isGarmentMode ? const Color(0xFF90553A) : Colors.white;
     final outerColor = innerColor.withValues(alpha: 0.3);
 
     return Container(
@@ -480,15 +571,13 @@ class _ShutterButton extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: outerColor,
-        border: Border.all(
-            color: innerColor.withValues(alpha: 0.8), width: 3),
+        border: Border.all(color: innerColor.withValues(alpha: 0.8), width: 3),
       ),
       child: Center(
         child: Container(
           width: 60.w,
           height: 60.w,
-          decoration:
-              BoxDecoration(shape: BoxShape.circle, color: innerColor),
+          decoration: BoxDecoration(shape: BoxShape.circle, color: innerColor),
         ),
       ),
     );
@@ -549,25 +638,28 @@ class _ErrorView extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.camera_alt_outlined,
-                  color: Colors.white38, size: 64.sp),
+              Icon(
+                Icons.camera_alt_outlined,
+                color: Colors.white38,
+                size: 64.sp,
+              ),
               SizedBox(height: 16.h),
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style:
-                    TextStyle(color: Colors.white60, fontSize: 14.sp),
+                style: TextStyle(color: Colors.white60, fontSize: 14.sp),
               ),
               SizedBox(height: 20.h),
               ElevatedButton(
-                onPressed: () => context
-                    .read<CameraBloc>()
-                    .add(const InitCameraEvent()),
+                onPressed: () =>
+                    context.read<CameraBloc>().add(const InitCameraEvent()),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF90553A),
                 ),
-                child: const Text('Thử lại',
-                    style: TextStyle(color: Colors.white)),
+                child: const Text(
+                  'Thử lại',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),

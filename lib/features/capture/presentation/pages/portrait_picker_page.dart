@@ -9,6 +9,7 @@ import 'package:fit_check/features/capture/presentation/bloc/portrait_picker_eve
 import 'package:fit_check/features/capture/presentation/bloc/portrait_picker_state.dart';
 import 'package:fit_check/features/capture/presentation/widgets/photo_grid_item.dart';
 import 'package:fit_check/features/capture/presentation/widgets/system_model_card.dart';
+import 'package:fit_check/features/tryon/data/repositories/tryon_repository_impl.dart';
 import 'package:fit_check/features/tryon/domain/entities/garment_variant.dart';
 
 /// Màn hình "Chọn chân dung" — xuất hiện sau khi AI phân tích quần áo xong.
@@ -17,10 +18,14 @@ import 'package:fit_check/features/tryon/domain/entities/garment_variant.dart';
 class PortraitPickerPage extends StatelessWidget {
   /// Garment đã chụp/chọn trước đó (null nếu không có)
   final GarmentScan? garmentScan;
+  final String? garmentImagePath;
+  final bool isUpdating;
 
   const PortraitPickerPage({
     super.key,
     this.garmentScan,
+    this.garmentImagePath,
+    this.isUpdating = false,
   });
 
   @override
@@ -28,20 +33,7 @@ class PortraitPickerPage extends StatelessWidget {
     return BlocConsumer<PortraitPickerBloc, PortraitPickerState>(
       listener: (context, state) {
         if (state is PortraitPickerConfirmed) {
-          // Navigate sang TryOnResult với ảnh người đã chọn
-          context.push('/tryon/result', extra: {
-            'portraitImagePath': state.portraitPath,
-            'garmentImagePath': garmentScan?.imagePath ??
-                'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=600',
-            'initialVariant': const GarmentVariant(
-              id: 1,
-              size: 'M',
-              colorHex: 'FFFFFF',
-              colorName: 'Trắng',
-              price: 299000,
-              stockCount: 10,
-            ),
-          });
+          _processTryOnAndOpenCanvas(context, state.portraitPath);
         }
       },
       builder: (context, state) {
@@ -74,9 +66,7 @@ class PortraitPickerPage extends StatelessWidget {
                       _buildTabBar(context, state),
 
                       // ── Photo Grid ─────────────────────────────────────
-                      Expanded(
-                        child: _buildPhotoGrid(context, state),
-                      ),
+                      Expanded(child: _buildPhotoGrid(context, state)),
                     ],
                   ),
                 ),
@@ -89,6 +79,85 @@ class PortraitPickerPage extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<void> _processTryOnAndOpenCanvas(
+    BuildContext context,
+    String portraitPath,
+  ) async {
+    final garmentPath =
+        garmentScan?.removedBgImagePath ??
+        garmentScan?.imagePath ??
+        garmentImagePath ??
+        'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=600';
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E1E1E),
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: Colors.white12),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(
+                color: Color(0xFF90553A),
+                strokeWidth: 3,
+              ),
+              SizedBox(height: 24.h),
+              Text(
+                'Đang ướm thử trang phục...',
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final session = await TryonRepositoryImpl().submitTryOn(
+      portraitImagePath: portraitPath,
+      garmentImagePath: garmentPath,
+      variant: const GarmentVariant(
+        id: 1,
+        size: 'M',
+        colorHex: 'FFFFFF',
+        colorName: 'Trắng',
+        price: 299000,
+        stockCount: 10,
+      ),
+    );
+
+    if (context.mounted) {
+      Navigator.of(context).pop();
+      if (isUpdating) {
+        context.pop({
+          'portraitImagePath': portraitPath,
+          'resultImagePath': session.resultImagePath,
+        });
+      } else {
+        context.push(
+          '/canvas',
+          extra: {
+            'portraitImagePath': portraitPath,
+            'garmentImagePath': garmentPath,
+            'resultImagePath': session.resultImagePath,
+          },
+        );
+      }
+    }
   }
 
   // ─── Top Bar ──────────────────────────────────────────────────────────────
@@ -143,8 +212,11 @@ class PortraitPickerPage extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: 3.w),
-                  const Icon(Icons.help_outline,
-                      color: Color(0xFF4CAF50), size: 15),
+                  const Icon(
+                    Icons.help_outline,
+                    color: Color(0xFF4CAF50),
+                    size: 15,
+                  ),
                 ],
               ),
             ),
@@ -154,9 +226,8 @@ class PortraitPickerPage extends StatelessWidget {
     );
   }
 
-  // ─── Section Model Hệ Thống ──────────────────────────────────────────────
-  Widget _buildModelSection(
-      BuildContext context, PortraitPickerLoaded state) {
+  // Section Model Hệ Thống
+  Widget _buildModelSection(BuildContext context, PortraitPickerLoaded state) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -184,9 +255,9 @@ class PortraitPickerPage extends StatelessWidget {
               return SystemModelCard(
                 model: model,
                 isSelected: state.selectedModel?.id == model.id,
-                onTap: () => context
-                    .read<PortraitPickerBloc>()
-                    .add(SelectSystemModel(model)),
+                onTap: () => context.read<PortraitPickerBloc>().add(
+                  SelectSystemModel(model),
+                ),
               );
             },
           ),
@@ -216,18 +287,15 @@ class PortraitPickerPage extends StatelessWidget {
 
           return Expanded(
             child: GestureDetector(
-              onTap: () => context
-                  .read<PortraitPickerBloc>()
-                  .add(SwitchPickerTab(i)),
+              onTap: () =>
+                  context.read<PortraitPickerBloc>().add(SwitchPickerTab(i)),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 padding: EdgeInsets.symmetric(vertical: 12.h),
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: isActive
-                          ? Colors.white
-                          : Colors.transparent,
+                      color: isActive ? Colors.white : Colors.transparent,
                       width: 2,
                     ),
                   ),
@@ -237,8 +305,7 @@ class PortraitPickerPage extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(
                     fontSize: 12.sp,
-                    fontWeight:
-                        isActive ? FontWeight.w700 : FontWeight.w400,
+                    fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
                     color: isActive
                         ? Colors.white
                         : Colors.white.withValues(alpha: 0.45),
@@ -272,10 +339,29 @@ class PortraitPickerPage extends StatelessWidget {
           return PhotoGridItem.camera(
             onTap: () {
               // Navigate sang camera portrait để chụp selfie mới
-              context.push('/camera', extra: {
-                'mode': 'portrait',
-                'useFrontCamera': true,
-              });
+              if (isUpdating) {
+                // If updating, wait for result from camera canvas if possible
+                // But /camera pushes /canvas. To keep it simple, we just push /camera.
+                context.push(
+                  '/camera',
+                  extra: {
+                    'mode': 'portrait',
+                    'useFrontCamera': true,
+                    'garmentScan': garmentScan,
+                    // Garment image fallback so camera canvas knows what to try on
+                    'garmentImagePath': garmentImagePath,
+                  },
+                );
+              } else {
+                context.push(
+                  '/camera',
+                  extra: {
+                    'mode': 'portrait',
+                    'useFrontCamera': true,
+                    'garmentScan': garmentScan,
+                  },
+                );
+              }
             },
           );
         }
@@ -286,25 +372,27 @@ class PortraitPickerPage extends StatelessWidget {
         return PhotoGridItem(
           imageUrl: photo,
           isSelected: state.selectedImagePath == photo,
-          onTap: () => context
-              .read<PortraitPickerBloc>()
-              .add(SelectPhoto(photo)),
+          onTap: () =>
+              context.read<PortraitPickerBloc>().add(SelectPhoto(photo)),
         );
       },
     );
   }
 
   // ─── Confirm Button ───────────────────────────────────────────────────────
-  Widget _buildConfirmButton(
-      BuildContext context, PortraitPickerLoaded state) {
+  Widget _buildConfirmButton(BuildContext context, PortraitPickerLoaded state) {
     return AnimatedSize(
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeOut,
       child: state.hasSelection
           ? Container(
               color: const Color(0xFF0D0D0D),
-              padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w,
-                  MediaQuery.of(context).padding.bottom + 12.h),
+              padding: EdgeInsets.fromLTRB(
+                20.w,
+                12.h,
+                20.w,
+                MediaQuery.of(context).padding.bottom + 12.h,
+              ),
               child: Row(
                 children: [
                   // Preview ảnh đã chọn
@@ -314,7 +402,9 @@ class PortraitPickerPage extends StatelessWidget {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10.r),
                       border: Border.all(
-                          color: const Color(0xFF90553A), width: 2),
+                        color: const Color(0xFF90553A),
+                        width: 2,
+                      ),
                     ),
                     clipBehavior: Clip.antiAlias,
                     child: Image.network(
@@ -354,12 +444,14 @@ class PortraitPickerPage extends StatelessWidget {
 
                   // Nút confirm
                   GestureDetector(
-                    onTap: () => context
-                        .read<PortraitPickerBloc>()
-                        .add(const ConfirmPortraitSelection()),
+                    onTap: () => context.read<PortraitPickerBloc>().add(
+                      const ConfirmPortraitSelection(),
+                    ),
                     child: Container(
                       padding: EdgeInsets.symmetric(
-                          horizontal: 18.w, vertical: 12.h),
+                        horizontal: 18.w,
+                        vertical: 12.h,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFF90553A),
                         borderRadius: BorderRadius.circular(24.r),
@@ -375,8 +467,11 @@ class PortraitPickerPage extends StatelessWidget {
                             ),
                           ),
                           SizedBox(width: 6.w),
-                          Icon(Icons.arrow_forward_rounded,
-                              color: Colors.white, size: 16.sp),
+                          Icon(
+                            Icons.arrow_forward_rounded,
+                            color: Colors.white,
+                            size: 16.sp,
+                          ),
                         ],
                       ),
                     ),

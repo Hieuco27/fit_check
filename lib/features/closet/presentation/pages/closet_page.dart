@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:fit_check/core/constants/app_colors.dart';
 import 'package:fit_check/features/closet/presentation/widgets/category_chips.dart';
 import 'package:fit_check/features/closet/presentation/widgets/closet_search_bar.dart';
 import 'package:fit_check/features/closet/presentation/widgets/custom_gradient_tabbar.dart';
@@ -67,9 +68,8 @@ class _ClosetPageState extends State<ClosetPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Deep dark premium theme
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0B0E),
+      backgroundColor: AppColors.homeBackground,
       body: SafeArea(
         child: Column(
           children: [
@@ -140,13 +140,13 @@ class _ClosetPageState extends State<ClosetPage> {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: const LinearGradient(
-              colors: [Colors.blueAccent, Colors.blueAccent],
+              colors: [AppColors.homeAccentLight, AppColors.homeAccentBrown],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.blueAccent.withValues(alpha: 0.4),
+                color: AppColors.homeAccentBrown.withValues(alpha: 0.3),
                 blurRadius: 16,
                 offset: const Offset(0, 4),
               ),

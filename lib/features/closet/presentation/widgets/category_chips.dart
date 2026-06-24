@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:fit_check/core/constants/app_colors.dart';
 
 class CategoryChips extends StatelessWidget {
   final List<String> categories;
@@ -34,9 +35,9 @@ class CategoryChips extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 16.w),
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: isActive ? Colors.white : Colors.transparent,
+                color: isActive ? AppColors.homePrimaryCard : Colors.transparent,
                 border: Border.all(
-                  color: isActive ? Colors.white : const Color(0xFF1E1E24),
+                  color: isActive ? AppColors.homePrimaryCard : AppColors.homeDivider,
                   width: 1.5,
                 ),
                 borderRadius: BorderRadius.circular(18.r),
@@ -44,7 +45,7 @@ class CategoryChips extends StatelessWidget {
               child: Text(
                 category,
                 style: GoogleFonts.inter(
-                  color: isActive ? const Color(0xFF0B0B0E) : Colors.white,
+                  color: isActive ? Colors.white : AppColors.homeTextSecondary,
                   fontSize: 13.sp,
                   fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
                 ),

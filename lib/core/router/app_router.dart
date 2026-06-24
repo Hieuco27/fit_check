@@ -13,7 +13,6 @@ import 'package:fit_check/features/capture/presentation/pages/interaction_canvas
 import 'package:fit_check/features/capture/presentation/pages/portrait_picker_page.dart';
 import 'package:fit_check/features/capture/presentation/pages/smart_camera_page.dart';
 import 'package:fit_check/features/home/presentation/pages/home_page.dart';
-import 'package:fit_check/features/tryon/domain/entities/garment_variant.dart';
 import 'package:fit_check/features/tryon/presentation/pages/tryon_result_page.dart';
 
 class AppRouter {
@@ -44,10 +43,12 @@ class AppRouter {
 
           // Đọc camera facing, mặc định cam sau
           final useFrontCamera = extra?['useFrontCamera'] as bool? ?? false;
+          final garmentScan = extra?['garmentScan'] as GarmentScan?;
 
           return SmartCameraPage(
             initialMode: initialMode,
             useFrontCamera: useFrontCamera,
+            garmentScanForTryOn: garmentScan,
           );
         },
         routes: [
@@ -64,6 +65,20 @@ class AppRouter {
         path: '/canvas',
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
+          final portraitImagePath = extra?['portraitImagePath'] as String?;
+          final garmentImagePath = extra?['garmentImagePath'] as String?;
+          final resultImagePath = extra?['resultImagePath'] as String?;
+
+          if (portraitImagePath != null &&
+              garmentImagePath != null &&
+              resultImagePath != null) {
+            return InteractionCanvasPage(
+              portraitImagePath: portraitImagePath,
+              garmentImagePath: garmentImagePath,
+              resultImagePath: resultImagePath,
+            );
+          }
+
           if (extra != null && extra.containsKey('bloc')) {
             return BlocProvider<CameraBloc>.value(
               value: extra['bloc'] as CameraBloc,
@@ -82,10 +97,16 @@ class AppRouter {
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>? ?? {};
           final garmentScan = extra['garmentScan'] as GarmentScan?;
+          final garmentImagePath = extra['garmentImagePath'] as String?;
+          final isUpdating = extra['isUpdating'] as bool? ?? false;
 
           return BlocProvider(
             create: (_) => PortraitPickerBloc()..add(const LoadPickerData()),
-            child: PortraitPickerPage(garmentScan: garmentScan),
+            child: PortraitPickerPage(
+              garmentScan: garmentScan,
+              garmentImagePath: garmentImagePath,
+              isUpdating: isUpdating,
+            ),
           );
         },
       ),
@@ -95,14 +116,18 @@ class AppRouter {
         path: '/tryon/result',
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>? ?? {};
-          final portraitPath = extra['portraitImagePath'] as String? ??
+          final portraitPath =
+              extra['portraitImagePath'] as String? ??
               'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=600';
-          final garmentPath = extra['garmentImagePath'] as String? ??
+          final garmentPath =
+              extra['garmentImagePath'] as String? ??
               'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=600';
-          
+          final resultPath = extra['resultImagePath'] as String?;
+
           return TryOnResultPage(
             portraitImagePath: portraitPath,
             garmentImagePath: garmentPath,
+            resultImagePath: resultPath,
           );
         },
       ),

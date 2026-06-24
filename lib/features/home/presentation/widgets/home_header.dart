@@ -107,12 +107,9 @@ class HomeHeader extends StatelessWidget {
             ),
           ],
         ),
-
-        SizedBox(height: 16.h),
-
         // ── Lời chào + Tiêu đề chính ──
         Text(
-          'Chào lại, $userName 👋',
+          'Chào bạn, $userName 👋',
           style: GoogleFonts.inter(
             fontSize: 14.sp,
             fontWeight: FontWeight.w500,
@@ -123,10 +120,9 @@ class HomeHeader extends StatelessWidget {
         Text(
           'Hôm nay mặc gì?',
           style: GoogleFonts.inter(
-            fontSize: 26.sp,
-            fontWeight: FontWeight.w800,
+            fontSize: 24.sp,
+            fontWeight: FontWeight.w700,
             color: AppColors.homeTextPrimary,
-            height: 1.2,
           ),
         ),
       ],

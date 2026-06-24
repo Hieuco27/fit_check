@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
@@ -6,11 +8,13 @@ import 'package:google_fonts/google_fonts.dart';
 class TryOnResultPage extends StatefulWidget {
   final String portraitImagePath;
   final String garmentImagePath;
+  final String? resultImagePath;
 
   const TryOnResultPage({
     super.key,
     required this.portraitImagePath,
     required this.garmentImagePath,
+    this.resultImagePath,
   });
 
   @override
@@ -183,8 +187,7 @@ class _TryOnResultPageState extends State<TryOnResultPage> {
   // ─── Image Area ─────────────────────────────────────────────────────────────
   Widget _buildImageArea() {
     final currentImage = (_showAfter && !_isHolding)
-        ? widget
-              .garmentImagePath // Giả lập ảnh AI
+        ? widget.resultImagePath ?? widget.garmentImagePath
         : widget.portraitImagePath;
 
     return Container(
@@ -198,13 +201,7 @@ class _TryOnResultPageState extends State<TryOnResultPage> {
         fit: StackFit.expand,
         children: [
           // ── Ảnh chính ──
-          Image.network(
-            currentImage,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => const Center(
-              child: Icon(Icons.person, color: Colors.black12, size: 100),
-            ),
-          ),
+          _buildImage(currentImage),
 
           // ── Badge AI (chỉ hiện trên ảnh Sau) ──
           if (_showAfter && !_isHolding)
@@ -234,6 +231,26 @@ class _TryOnResultPageState extends State<TryOnResultPage> {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildImage(String imagePath) {
+    if (imagePath.startsWith('http')) {
+      return Image.network(
+        imagePath,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => const Center(
+          child: Icon(Icons.person, color: Colors.black12, size: 100),
+        ),
+      );
+    }
+
+    return Image.file(
+      File(imagePath),
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => const Center(
+        child: Icon(Icons.person, color: Colors.black12, size: 100),
       ),
     );
   }

@@ -72,13 +72,7 @@ class HomeNavBar extends StatelessWidget {
           color: AppColors.wardroBrown,
           shape: BoxShape.circle,
         ),
-        child: Center(
-          child: Icon(
-            Icons.document_scanner_outlined, // Match the scan icon
-            color: Colors.white,
-            size: 24.sp,
-          ),
-        ),
+        child: Center(child: Image.asset('assets/images/home/camera.png')),
       ),
     );
   }

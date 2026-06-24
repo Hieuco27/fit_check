@@ -69,7 +69,7 @@ class SystemModelCard extends StatelessWidget {
                 ),
               ),
 
-              // ── Gradient bottom + tên ──────────────────────────────────
+              // ── Gradient bottom + tên 
               Positioned(
                 bottom: 0,
                 left: 0,
@@ -96,7 +96,7 @@ class SystemModelCard extends StatelessWidget {
                 ),
               ),
 
-              // ── Tick overlay khi chọn ──────────────────────────────────
+              // ── Tick overlay khi chọn 
               if (isSelected)
                 Positioned(
                   top: 8.w,

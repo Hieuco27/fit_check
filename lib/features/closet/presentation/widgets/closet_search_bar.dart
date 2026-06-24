@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:fit_check/core/constants/app_colors.dart';
 
 class ClosetSearchBar extends StatelessWidget {
   final VoidCallback onFilterTap;
@@ -18,23 +19,23 @@ class ClosetSearchBar extends StatelessWidget {
             child: Container(
               height: 44.h,
               decoration: BoxDecoration(
-                color: const Color(0xFF1E1E24), // Dark grey container
+                color: AppColors.homeSurfaceAlt,
                 borderRadius: BorderRadius.circular(16.r),
               ),
               child: TextField(
                 style: GoogleFonts.inter(
-                  color: Colors.white,
+                  color: AppColors.homeTextPrimary,
                   fontSize: 14.sp,
                 ),
                 decoration: InputDecoration(
                   hintText: 'Tìm kiếm trang phục...',
                   hintStyle: GoogleFonts.inter(
-                    color: Colors.white38,
+                    color: AppColors.homeTextSecondary.withValues(alpha: 0.6),
                     fontSize: 14.sp,
                   ),
                   prefixIcon: const Icon(
                     Icons.search_rounded,
-                    color: Colors.white54,
+                    color: AppColors.homeTextSecondary,
                   ),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(
@@ -53,12 +54,12 @@ class ClosetSearchBar extends StatelessWidget {
               width: 44.h,
               height: 44.h,
               decoration: BoxDecoration(
-                color: const Color(0xFF1E1E24), // Dark grey container
+                color: AppColors.homeSurfaceAlt,
                 borderRadius: BorderRadius.circular(16.r),
               ),
               child: const Icon(
                 Icons.tune_rounded, // Filter icon
-                color: Colors.white,
+                color: AppColors.homeTextPrimary,
               ),
             ),
           ),

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:fit_check/features/capture/domain/entities/body_profile.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fit_check/features/capture/domain/entities/garment_scan.dart';
 import 'package:fit_check/features/capture/presentation/bloc/camera_bloc.dart';
@@ -11,10 +12,20 @@ import 'package:fit_check/features/capture/presentation/bloc/camera_event.dart';
 import 'package:fit_check/features/capture/presentation/bloc/camera_state.dart';
 import 'package:fit_check/features/capture/presentation/widgets/garment_preview_card.dart';
 import 'package:fit_check/features/capture/presentation/widgets/garment_selection_panel.dart';
+import 'package:fit_check/features/tryon/data/repositories/tryon_repository_impl.dart';
 import 'package:fit_check/features/tryon/domain/entities/garment_variant.dart';
 
 class InteractionCanvasPage extends StatefulWidget {
-  const InteractionCanvasPage({super.key});
+  final String? portraitImagePath;
+  final String? garmentImagePath;
+  final String? resultImagePath;
+
+  const InteractionCanvasPage({
+    super.key,
+    this.portraitImagePath,
+    this.garmentImagePath,
+    this.resultImagePath,
+  });
 
   @override
   State<InteractionCanvasPage> createState() => _InteractionCanvasPageState();
@@ -22,6 +33,7 @@ class InteractionCanvasPage extends StatefulWidget {
 
 class _InteractionCanvasPageState extends State<InteractionCanvasPage> {
   String? _selectedGarmentUrl;
+  bool _showOriginal = false;
 
   @override
   Widget build(BuildContext context) {
@@ -30,26 +42,157 @@ class _InteractionCanvasPageState extends State<InteractionCanvasPage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF16181C), // Màu nền tối đồng bộ
-      body: BlocConsumer<CameraBloc, CameraState>(
-        listener: (context, state) {},
-        builder: (context, state) {
-          if (state is PortraitAnalyzing) {
-            return _buildAnalyzingView('AI đang xử lý ảnh chân dung...');
-          }
-          if (state is PortraitAnalyzed) {
-            return _buildPortraitCanvas(context, state);
-          }
-          if (state is GarmentAnalyzing) {
-            return _buildAnalyzingView('AI đang phân tích trang phục...');
-          }
-          if (state is GarmentAnalyzed) {
-            return _buildGarmentCanvas(context, state);
-          }
-          // Fallback
-          return const Center(
-            child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
-          );
-        },
+      body: _hasTryOnPreview
+          ? _buildTryOnPreviewCanvas(
+              context,
+              portraitImagePath: widget.portraitImagePath!,
+              garmentImagePath: widget.garmentImagePath!,
+              resultImagePath: widget.resultImagePath!,
+            )
+          : BlocConsumer<CameraBloc, CameraState>(
+              listener: (context, state) {},
+              builder: (context, state) {
+                if (state is PortraitAnalyzing) {
+                  return _buildAnalyzingView('AI đang xử lý ảnh chân dung...');
+                }
+                if (state is PortraitAnalyzed) {
+                  return _buildPortraitCanvas(context, state);
+                }
+                if (state is GarmentAnalyzing) {
+                  return _buildAnalyzingView('AI đang phân tích trang phục...');
+                }
+                if (state is GarmentAnalyzed) {
+                  return _buildGarmentCanvas(context, state);
+                }
+                // Fallback
+                return const Center(
+                  child: CircularProgressIndicator(color: Color(0xFF4CAF50)),
+                );
+              },
+            ),
+    );
+  }
+
+  bool get _hasTryOnPreview =>
+      widget.portraitImagePath != null &&
+      widget.garmentImagePath != null &&
+      widget.resultImagePath != null;
+
+  Widget _buildTryOnPreviewCanvas(
+    BuildContext context, {
+    required String portraitImagePath,
+    required String garmentImagePath,
+    required String resultImagePath,
+  }) {
+    return SafeArea(
+      child: Stack(
+        children: [
+          Column(
+            children: [
+              _buildNewTopBar(
+                context,
+                onSave: () => _navigateToResult(
+                  context,
+                  portraitImagePath: portraitImagePath,
+                  garmentImagePath: garmentImagePath,
+                  resultImagePath: resultImagePath,
+                ),
+                saveEnabled: true,
+              ),
+              Expanded(
+                flex: 6,
+                child: Stack(
+                  children: [
+                    SizedBox.expand(
+                      child: _buildImageWidget(
+                        _showOriginal ? portraitImagePath : resultImagePath,
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 16.h,
+                      left: 0,
+                      right: 0,
+                      child: Center(child: _buildChangePhotoButton(context)),
+                    ),
+                    Positioned(
+                      bottom: 16.h,
+                      right: 16.w,
+                      child: GestureDetector(
+                        onTapDown: (_) => setState(() => _showOriginal = true),
+                        onTapUp: (_) => setState(() => _showOriginal = false),
+                        onTapCancel: () =>
+                            setState(() => _showOriginal = false),
+                        child: Container(
+                          padding: EdgeInsets.all(10.w),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.compare,
+                            color: Colors.white,
+                            size: 22.sp,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 4,
+                child: GarmentSelectionPanel(
+                  selectedGarmentUrl: _selectedGarmentUrl,
+                  onGarmentSelected: (garmentUrl) {
+                    setState(() {
+                      _selectedGarmentUrl = garmentUrl;
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+          Positioned(
+            bottom: 24.h,
+            left: 20.w,
+            right: 20.w,
+            child: Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: _selectedGarmentUrl == null
+                        ? null
+                        : () => _navigateToTryOnFromPaths(
+                            context,
+                            portraitImagePath: portraitImagePath,
+                            garmentImagePath: _selectedGarmentUrl!,
+                          ),
+                    child: Container(
+                      height: 54.h,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: _selectedGarmentUrl == null
+                            ? const Color(0xFF2B303B)
+                            : const Color(0xFF4A90E2),
+                        borderRadius: BorderRadius.circular(16.r),
+                      ),
+                      child: Text(
+                        'Tạo ảnh',
+                        style: GoogleFonts.inter(
+                          color: _selectedGarmentUrl == null
+                              ? Colors.white54
+                              : Colors.white,
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -128,7 +271,11 @@ class _InteractionCanvasPageState extends State<InteractionCanvasPage> {
   }
 
   // ─── Top Bar Theo Thiết Kế ────────────────────────────────────────────────
-  Widget _buildNewTopBar(BuildContext context) {
+  Widget _buildNewTopBar(
+    BuildContext context, {
+    VoidCallback? onSave,
+    bool saveEnabled = false,
+  }) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       child: Row(
@@ -150,18 +297,23 @@ class _InteractionCanvasPageState extends State<InteractionCanvasPage> {
           ),
 
           // Nút Lưu
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-            decoration: BoxDecoration(
-              color: const Color(0xFF262A34),
-              borderRadius: BorderRadius.circular(16.r),
-            ),
-            child: Text(
-              'Lưu',
-              style: GoogleFonts.inter(
-                color: Colors.white54,
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w600,
+          GestureDetector(
+            onTap: saveEnabled ? onSave : null,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+              decoration: BoxDecoration(
+                color: saveEnabled
+                    ? const Color(0xFF90553A)
+                    : const Color(0xFF262A34),
+                borderRadius: BorderRadius.circular(16.r),
+              ),
+              child: Text(
+                'Lưu',
+                style: GoogleFonts.inter(
+                  color: saveEnabled ? Colors.white : Colors.white54,
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
@@ -170,7 +322,7 @@ class _InteractionCanvasPageState extends State<InteractionCanvasPage> {
     );
   }
 
-  // ─── Các nút nổi trên ảnh ──────────────────────────────────────────────────
+  // Các nút nổi trên ảnh
   Widget _buildFloatingAddButton() {
     return Container(
       width: 50.w,
@@ -199,8 +351,25 @@ class _InteractionCanvasPageState extends State<InteractionCanvasPage> {
 
   Widget _buildChangePhotoButton(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        context.read<CameraBloc>().add(const RetakeCaptureEvent());
+      onTap: () async {
+        final result = await context.push<Map<String, String?>>(
+          '/portrait-picker',
+          extra: {
+            'garmentImagePath': widget.garmentImagePath ?? _selectedGarmentUrl,
+            'isUpdating': true,
+          },
+        );
+        if (result != null && context.mounted) {
+          context.replace(
+            '/canvas',
+            extra: {
+              'portraitImagePath': result['portraitImagePath'],
+              'garmentImagePath':
+                  widget.garmentImagePath ?? _selectedGarmentUrl,
+              'resultImagePath': result['resultImagePath'],
+            },
+          );
+        }
       },
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
@@ -227,7 +396,7 @@ class _InteractionCanvasPageState extends State<InteractionCanvasPage> {
     );
   }
 
-  // ─── Nút hành động nổi ở bottom ───────────────────────────────────────────
+  //  Nút hành động nổi ở bottom
   Widget _buildBottomActionButtons(PortraitAnalyzed state) {
     final hasSelection = _selectedGarmentUrl != null;
 
@@ -247,7 +416,9 @@ class _InteractionCanvasPageState extends State<InteractionCanvasPage> {
             child: Container(
               height: 54.h,
               decoration: BoxDecoration(
-                color: hasSelection ? const Color(0xFF4A90E2) : const Color(0xFF2B303B),
+                color: hasSelection
+                    ? const Color(0xFF4A90E2)
+                    : const Color(0xFF2B303B),
                 borderRadius: BorderRadius.circular(16.r),
               ),
               alignment: Alignment.center,
@@ -342,32 +513,118 @@ class _InteractionCanvasPageState extends State<InteractionCanvasPage> {
       ),
     );
 
-    await Future.delayed(const Duration(milliseconds: 2500));
-
-    if (context.mounted) {
-      Navigator.of(context).pop();
-    }
-
-    const mockVariant = GarmentVariant(
-      id: 2,
-      size: 'M',
-      colorHex: 'FFFFFF',
-      colorName: 'Trắng',
-      price: 299000,
-      stockCount: 10,
+    final session = await TryonRepositoryImpl().submitTryOn(
+      portraitImagePath: state.imagePath,
+      garmentImagePath: garmentPath,
+      variant: const GarmentVariant(
+        id: 2,
+        size: 'M',
+        colorHex: 'FFFFFF',
+        colorName: 'Trắng',
+        price: 299000,
+        stockCount: 10,
+      ),
     );
 
     if (context.mounted) {
+      Navigator.of(context).pop();
       context.push(
-        '/tryon/result',
+        '/canvas',
         extra: {
           'portraitImagePath': state.imagePath,
           'garmentImagePath': garmentPath,
-          'initialVariant': mockVariant,
+          'resultImagePath': session.resultImagePath,
           'targetZone': state.selectedZone,
         },
       );
     }
+  }
+
+  Future<void> _navigateToTryOnFromPaths(
+    BuildContext context, {
+    required String portraitImagePath,
+    required String garmentImagePath,
+  }) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 32.h),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E1E1E),
+            borderRadius: BorderRadius.circular(16.r),
+            border: Border.all(color: Colors.white12),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(
+                color: Color(0xFF90553A),
+                strokeWidth: 3,
+              ),
+              SizedBox(height: 24.h),
+              Text(
+                'Đang xử lý ảnh ...',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final session = await TryonRepositoryImpl().submitTryOn(
+      portraitImagePath: portraitImagePath,
+      garmentImagePath: garmentImagePath,
+      variant: const GarmentVariant(
+        id: 2,
+        size: 'M',
+        colorHex: 'FFFFFF',
+        colorName: 'Trắng',
+        price: 299000,
+        stockCount: 10,
+      ),
+    );
+
+    if (context.mounted) {
+      Navigator.of(context).pop();
+      context.push(
+        '/canvas',
+        extra: {
+          'portraitImagePath': portraitImagePath,
+          'garmentImagePath': garmentImagePath,
+          'resultImagePath': session.resultImagePath,
+        },
+      );
+    }
+  }
+
+  void _navigateToResult(
+    BuildContext context, {
+    required String portraitImagePath,
+    required String garmentImagePath,
+    String? resultImagePath,
+    GarmentVariant? initialVariant,
+    BodyZone? targetZone,
+  }) {
+    context.push(
+      '/tryon/result',
+      extra: {
+        'portraitImagePath': portraitImagePath,
+        'garmentImagePath': garmentImagePath,
+        if (resultImagePath != null) 'resultImagePath': resultImagePath,
+        if (initialVariant != null) 'initialVariant': initialVariant,
+        if (targetZone != null) 'targetZone': targetZone,
+      },
+    );
   }
 
   void _navigateToTryOnFromGarment(BuildContext context, GarmentScan scan) {

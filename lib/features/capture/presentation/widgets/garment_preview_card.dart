@@ -87,7 +87,7 @@ class GarmentPreviewCard extends StatelessWidget {
         ),
         SizedBox(height: 20.h),
 
-        // ── AI Phân tích ────────────────────────────────────────────────────
+        // AI Phân tích
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 24.w),
           child: Column(
@@ -102,22 +102,36 @@ class GarmentPreviewCard extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 12.h),
-              _InfoRow(icon: Icons.checkroom, label: 'Loại', value: garmentScan.garmentType),
-              _InfoRow(icon: Icons.palette, label: 'Màu', value: garmentScan.color),
-              _InfoRow(icon: Icons.style, label: 'Kiểu dáng', value: garmentScan.style),
+              _InfoRow(
+                icon: Icons.checkroom,
+                label: 'Loại',
+                value: garmentScan.garmentType,
+              ),
+              _InfoRow(
+                icon: Icons.palette,
+                label: 'Màu',
+                value: garmentScan.color,
+              ),
+              _InfoRow(
+                icon: Icons.style,
+                label: 'Kiểu dáng',
+                value: garmentScan.style,
+              ),
               SizedBox(height: 12.h),
               // Tags
               Wrap(
                 spacing: 8.w,
                 runSpacing: 8.h,
-                children: garmentScan.tags.map((tag) => _TagChip(tag: tag)).toList(),
+                children: garmentScan.tags
+                    .map((tag) => _TagChip(tag: tag))
+                    .toList(),
               ),
             ],
           ),
         ),
         SizedBox(height: 24.h),
 
-        // ── Buttons ─────────────────────────────────────────────────────────
+        // Buttons
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 24.w),
           child: Column(
@@ -147,7 +161,11 @@ class GarmentPreviewCard extends StatelessWidget {
                         ),
                       ),
                       SizedBox(width: 6.w),
-                      const Icon(Icons.arrow_forward_rounded, color: Colors.black, size: 18),
+                      const Icon(
+                        Icons.arrow_forward_rounded,
+                        color: Colors.black,
+                        size: 18,
+                      ),
                     ],
                   ),
                 ),
@@ -162,11 +180,18 @@ class GarmentPreviewCard extends StatelessWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.refresh, color: Colors.white70, size: 16.sp),
+                          Icon(
+                            Icons.refresh,
+                            color: Colors.white70,
+                            size: 16.sp,
+                          ),
                           SizedBox(width: 4.w),
                           Text(
                             'Chụp lại',
-                            style: TextStyle(color: Colors.white70, fontSize: 13.sp),
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13.sp,
+                            ),
                           ),
                         ],
                       ),
@@ -179,11 +204,18 @@ class GarmentPreviewCard extends StatelessWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.add_to_photos_outlined, color: Colors.white70, size: 16.sp),
+                          Icon(
+                            Icons.add_to_photos_outlined,
+                            color: Colors.white70,
+                            size: 16.sp,
+                          ),
                           SizedBox(width: 4.w),
                           Text(
                             'Lưu vào tủ đồ',
-                            style: TextStyle(color: Colors.white70, fontSize: 13.sp),
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13.sp,
+                            ),
                           ),
                         ],
                       ),
@@ -204,7 +236,11 @@ class _InfoRow extends StatelessWidget {
   final String label;
   final String value;
 
-  const _InfoRow({required this.icon, required this.label, required this.value});
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
