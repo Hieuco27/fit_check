@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:fit_check/core/utils/text_styles.dart';
+import 'package:fit_check/core/constants/app_colors.dart';
 
 class SignOutButton extends StatelessWidget {
   final VoidCallback onTap;
@@ -20,10 +21,10 @@ class SignOutButton extends StatelessWidget {
         height: 48.h,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: const Color(0xFFFFF1F3), // Light pinkish-red background
+          color: Colors.white,
           borderRadius: BorderRadius.circular(24.r),
           border: Border.all(
-            color: const Color(0xFFFFD5DB),
+            color: AppColors.homeDivider,
             width: 1.5,
           ),
         ),
@@ -42,13 +43,13 @@ class SignOutButton extends StatelessWidget {
                   children: [
                     Icon(
                       Icons.logout_outlined,
-                      color: const Color(0xFFE53935), // Pure Red
+                      color: AppColors.wardroRedText,
                       size: 20.sp,
                     ),
                     SizedBox(width: 8.w),
                     Text(
                       'Sign Out',
-                      style: AppTextStyles.titleSmall(color: const Color(0xFFE53935)).copyWith(
+                      style: AppTextStyles.titleSmall(color: AppColors.wardroRedText).copyWith(
                         fontSize: 14.sp,
                         fontWeight: FontWeight.bold,
                       ),

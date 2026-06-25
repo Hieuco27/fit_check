@@ -6,9 +6,8 @@ import 'package:fit_check/features/capture/domain/entities/garment_scan.dart';
 import 'package:fit_check/features/capture/presentation/bloc/camera_bloc.dart';
 import 'package:fit_check/features/capture/presentation/bloc/portrait_picker_bloc.dart';
 import 'package:fit_check/features/capture/presentation/bloc/portrait_picker_event.dart';
-import 'package:fit_check/features/auth/presentation/pages/splash_page.dart';
-import 'package:fit_check/features/auth/presentation/pages/login_page.dart';
-import 'package:fit_check/features/auth/presentation/pages/register_page.dart';
+import 'package:fit_check/features/auth/presentation/pages/sign_in_page.dart';
+import 'package:fit_check/features/auth/presentation/pages/sign_up_page.dart';
 import 'package:fit_check/features/capture/presentation/pages/interaction_canvas_page.dart';
 import 'package:fit_check/features/capture/presentation/pages/portrait_picker_page.dart';
 import 'package:fit_check/features/capture/presentation/pages/smart_camera_page.dart';
@@ -21,11 +20,10 @@ class AppRouter {
   static final GoRouter router = GoRouter(
     initialLocation: '/',
     routes: <RouteBase>[
-      GoRoute(path: '/', builder: (context, state) => const SplashPage()),
-      GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
+      GoRoute(path: '/login', builder: (context, state) => const SignInPage()),
       GoRoute(
         path: '/register',
-        builder: (context, state) => const RegisterPage(),
+        builder: (context, state) => const SignUpPage(),
       ),
       GoRoute(path: '/home', builder: (context, state) => const HomePage()),
 

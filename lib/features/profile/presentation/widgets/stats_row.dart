@@ -43,7 +43,7 @@ class StatsRow extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: const Color(0xFFF5F2F9),
+          color: AppColors.homeDivider,
           width: 1.5,
         ),
         boxShadow: [
@@ -61,12 +61,12 @@ class StatsRow extends StatelessWidget {
             width: 32.w,
             height: 32.w,
             decoration: const BoxDecoration(
-              color: Color(0xFFF1EAFF),
+              color: AppColors.homeAccentCream,
               shape: BoxShape.circle,
             ),
             child: Icon(
               icon,
-              color: AppColors.brandPurple,
+              color: AppColors.homeAccentBrown,
               size: 18.sp,
             ),
           ),
@@ -75,7 +75,7 @@ class StatsRow extends StatelessWidget {
           Text(
             statValue,
             style: AppTextStyles.headlineLarge().copyWith(
-              color: AppColors.brandPurple,
+              color: AppColors.homeTextPrimary,
               fontSize: 24.sp,
               fontWeight: FontWeight.w800,
             ),
@@ -85,7 +85,7 @@ class StatsRow extends StatelessWidget {
           Text(
             label,
             style: AppTextStyles.bodyMedium().copyWith(
-              color: const Color(0xFF7D7690),
+              color: AppColors.homeTextSecondary,
               fontSize: 10.sp,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.5,

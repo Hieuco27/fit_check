@@ -10,4 +10,7 @@ class ProfileMenuItem {
     required this.icon,
     required this.category,
   });
+  Widget build(BuildContext context) {
+    return Row(children: [Icon(icon), Text(title), Text(category)]);
+  }
 }

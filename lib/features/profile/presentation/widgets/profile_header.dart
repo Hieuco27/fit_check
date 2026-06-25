@@ -18,7 +18,7 @@ class ProfileHeader extends StatelessWidget {
           children: [
             Text(
               'Fit Check',
-              style: AppTextStyles.titleMedium(color: AppColors.brandPurple)
+              style: AppTextStyles.titleMedium(color: AppColors.homeTextPrimary)
                   .copyWith(
                     fontSize: 22.sp,
                     fontWeight: FontWeight.w900,
@@ -31,7 +31,7 @@ class ProfileHeader extends StatelessWidget {
           onTap: onSettingsTap ?? () {},
           child: Icon(
             Icons.settings_outlined,
-            color: AppColors.brandPurple,
+            color: AppColors.homeTextPrimary,
             size: 24.sp,
           ),
         ),

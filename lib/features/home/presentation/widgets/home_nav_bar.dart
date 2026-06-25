@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:fit_check/core/constants/app_colors.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class HomeNavBar extends StatelessWidget {
   final int currentIndex;
@@ -33,28 +34,32 @@ class HomeNavBar extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            _buildIconItem(0, Icons.home_outlined),
-            _buildIconItem(1, Icons.explore_outlined),
+            _buildIconItem(0, 'assets/images/navbar/home.svg'),
+            _buildIconItem(1, 'assets/images/navbar/tudo.svg'),
             _buildCenterItem(context),
-            _buildIconItem(2, Icons.favorite_border_outlined),
-            _buildIconItem(3, Icons.person_outline),
+            _buildIconItem(2, 'assets/images/navbar/store.svg'),
+            _buildIconItem(3, 'assets/images/navbar/profile.svg'),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildIconItem(int index, IconData icon) {
+  Widget _buildIconItem(int index, String iconPath) {
     final isSelected = currentIndex == index;
     return GestureDetector(
       onTap: () => onTap(index),
       behavior: HitTestBehavior.opaque,
       child: Container(
         padding: EdgeInsets.all(12.w),
-        child: Icon(
-          icon,
-          color: isSelected ? AppColors.wardroBrown : const Color(0xFF9E9E9E),
-          size: 28.sp,
+        child: SvgPicture.asset(
+          iconPath,
+          colorFilter: ColorFilter.mode(
+            isSelected ? AppColors.wardroBrown : const Color(0xFF9E9E9E),
+            BlendMode.srcIn,
+          ),
+          width: 28.sp,
+          height: 28.sp,
         ),
       ),
     );

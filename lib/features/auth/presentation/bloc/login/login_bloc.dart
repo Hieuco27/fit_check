@@ -1,9 +1,12 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fit_check/features/auth/domain/usecase/sign_in_usecase.dart';
 import 'login_event.dart';
 import 'login_state.dart';
 
 class LoginBloc extends Bloc<LoginEvent, LoginState> {
-  LoginBloc() : super(LoginInitial()) {
+  final SignInUseCase signInUseCase;
+
+  LoginBloc({required this.signInUseCase}) : super(LoginInitial()) {
     on<LoginSubmitted>(_onLoginSubmitted);
   }
 
@@ -13,17 +16,8 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
   ) async {
     emit(LoginLoading());
     try {
-      // Mock API call delay
-      await Future.delayed(const Duration(seconds: 2));
-
-      // Simple validation for mock purpose
-      if (event.email.isEmpty || event.password.isEmpty) {
-        emit(const LoginError('Email and password cannot be empty.'));
-        return;
-      }
-
-      // Success
-      emit(LoginSuccess());
+      final user = await signInUseCase.execute(event.email, event.password);
+      emit(LoginSuccess(user));
     } catch (e) {
       emit(LoginError(e.toString()));
     }

@@ -32,9 +32,7 @@ class _ProfileView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(
-        0xFFFAF8FB,
-      ), // Very light purple/pink background
+      backgroundColor: AppColors.homeBackground,
       body: SafeArea(
         child: BlocListener<ProfileBloc, ProfileState>(
           listener: (context, state) {
@@ -51,7 +49,7 @@ class _ProfileView extends StatelessWidget {
               if (state is ProfileLoading || state is ProfileInitial) {
                 return const Center(
                   child: CircularProgressIndicator(
-                    color: AppColors.brandPurple,
+                    color: AppColors.homeAccentBrown,
                   ),
                 );
               } else if (state is ProfileLoaded) {
@@ -117,7 +115,7 @@ class _ProfileView extends StatelessWidget {
                         child: Text(
                           'MODA AI v2.4.1 - Intelligent Editorial System',
                           style: AppTextStyles.bodyMedium().copyWith(
-                            color: const Color(0xFF7D7690),
+                            color: AppColors.homeTextSecondary,
                             fontSize: 11.sp,
                             fontStyle: FontStyle.italic,
                           ),

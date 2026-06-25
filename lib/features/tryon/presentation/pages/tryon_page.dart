@@ -13,7 +13,7 @@ import 'package:fit_check/features/tryon/presentation/widgets/category_selector.
 import 'package:fit_check/features/tryon/presentation/widgets/item_tray.dart';
 import 'package:fit_check/features/tryon/presentation/widgets/result_app_bar.dart';
 import 'package:fit_check/features/tryon/presentation/widgets/metrics_cards.dart';
-import 'package:fit_check/features/auth/presentation/widgets/primary_button.dart';
+import 'package:fit_check/features/auth/presentation/widgets/comon/primary_button.dart';
 
 class TryonPage extends StatelessWidget {
   const TryonPage({super.key});
@@ -22,9 +22,11 @@ class TryonPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => TryonBloc()
-        ..add(const InitSession(
-          'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=80',
-        )),
+        ..add(
+          const InitSession(
+            'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=80',
+          ),
+        ),
       child: const _TryonView(),
     );
   }
@@ -36,7 +38,9 @@ class _TryonView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF8FB), // Very light purple/pink background
+      backgroundColor: const Color(
+        0xFFFAF8FB,
+      ), // Very light purple/pink background
       body: SafeArea(
         child: BlocListener<TryonBloc, TryonState>(
           listener: (context, state) {
@@ -54,7 +58,9 @@ class _TryonView extends StatelessWidget {
             builder: (context, state) {
               if (state is TryonInitial) {
                 return const Center(
-                  child: CircularProgressIndicator(color: AppColors.brandPurple),
+                  child: CircularProgressIndicator(
+                    color: AppColors.brandPurple,
+                  ),
                 );
               } else if (state is TryOnSelecting) {
                 return _buildSelectionView(context, state);
@@ -64,7 +70,10 @@ class _TryonView extends StatelessWidget {
                 return _buildResultView(context, state);
               } else if (state is TryOnError) {
                 return Center(
-                  child: Text(state.message, style: const TextStyle(color: Colors.red)),
+                  child: Text(
+                    state.message,
+                    style: const TextStyle(color: Colors.red),
+                  ),
                 );
               }
               return const SizedBox.shrink();
@@ -100,10 +109,9 @@ class _TryonView extends StatelessWidget {
               SizedBox(width: 12.w),
               Text(
                 'Phối đồ ảo',
-                style: AppTextStyles.titleMedium(color: AppColors.brandPurple).copyWith(
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.w900,
-                ),
+                style: AppTextStyles.titleMedium(
+                  color: AppColors.brandPurple,
+                ).copyWith(fontSize: 20.sp, fontWeight: FontWeight.w900),
               ),
             ],
           ),
@@ -120,10 +128,9 @@ class _TryonView extends StatelessWidget {
           // Category selector title
           Text(
             'Chọn đồ thử',
-            style: AppTextStyles.titleMedium(color: const Color(0xFF1F1B2C)).copyWith(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.bold,
-            ),
+            style: AppTextStyles.titleMedium(
+              color: const Color(0xFF1F1B2C),
+            ).copyWith(fontSize: 16.sp, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 12.h),
           // Category tabs
@@ -152,7 +159,11 @@ class _TryonView extends StatelessWidget {
             onPressed: state.selectedItems.isEmpty
                 ? () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Vui lòng chọn ít nhất 1 sản phẩm để thử!')),
+                      const SnackBar(
+                        content: Text(
+                          'Vui lòng chọn ít nhất 1 sản phẩm để thử!',
+                        ),
+                      ),
                     );
                   }
                 : () {
@@ -169,7 +180,8 @@ class _TryonView extends StatelessWidget {
   Widget _buildGeneratingView() {
     return const Center(
       child: TryonCanvas(
-        imagePath: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=80',
+        imagePath:
+            'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=600&auto=format&fit=crop&q=80',
         isGenerating: true,
       ),
     );
@@ -178,7 +190,9 @@ class _TryonView extends StatelessWidget {
   // result screen
   Widget _buildResultView(BuildContext context, TryOnResultLoaded state) {
     final session = state.session;
-    final displayImage = state.showAfter ? session.resultImagePath! : session.originalImagePath;
+    final displayImage = state.showAfter
+        ? session.resultImagePath!
+        : session.originalImagePath;
 
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
@@ -189,7 +203,9 @@ class _TryonView extends StatelessWidget {
           ResultAppBar(
             onBackTap: () {
               // Return to selecting screen
-              context.read<TryonBloc>().add(InitSession(session.originalImagePath));
+              context.read<TryonBloc>().add(
+                InitSession(session.originalImagePath),
+              );
             },
             onSaveTap: () {
               // Confirm and save outfit
@@ -212,11 +228,15 @@ class _TryonView extends StatelessWidget {
                   Expanded(
                     child: GestureDetector(
                       onTap: () {
-                        context.read<TryonBloc>().add(const ToggleBeforeAfter(false));
+                        context.read<TryonBloc>().add(
+                          const ToggleBeforeAfter(false),
+                        );
                       },
                       child: Container(
                         decoration: BoxDecoration(
-                          color: !state.showAfter ? Colors.white : Colors.transparent,
+                          color: !state.showAfter
+                              ? Colors.white
+                              : Colors.transparent,
                           borderRadius: BorderRadius.circular(20.r),
                           boxShadow: !state.showAfter
                               ? [
@@ -231,12 +251,17 @@ class _TryonView extends StatelessWidget {
                         child: Center(
                           child: Text(
                             'Trước',
-                            style: AppTextStyles.titleSmall(
-                              color: !state.showAfter ? const Color(0xFF1F1B2C) : const Color(0xFF7D7690),
-                            ).copyWith(
-                              fontSize: 12.sp,
-                              fontWeight: !state.showAfter ? FontWeight.bold : FontWeight.w500,
-                            ),
+                            style:
+                                AppTextStyles.titleSmall(
+                                  color: !state.showAfter
+                                      ? const Color(0xFF1F1B2C)
+                                      : const Color(0xFF7D7690),
+                                ).copyWith(
+                                  fontSize: 12.sp,
+                                  fontWeight: !state.showAfter
+                                      ? FontWeight.bold
+                                      : FontWeight.w500,
+                                ),
                           ),
                         ),
                       ),
@@ -246,11 +271,15 @@ class _TryonView extends StatelessWidget {
                   Expanded(
                     child: GestureDetector(
                       onTap: () {
-                        context.read<TryonBloc>().add(const ToggleBeforeAfter(true));
+                        context.read<TryonBloc>().add(
+                          const ToggleBeforeAfter(true),
+                        );
                       },
                       child: Container(
                         decoration: BoxDecoration(
-                          color: state.showAfter ? Colors.white : Colors.transparent,
+                          color: state.showAfter
+                              ? Colors.white
+                              : Colors.transparent,
                           borderRadius: BorderRadius.circular(20.r),
                           boxShadow: state.showAfter
                               ? [
@@ -265,12 +294,17 @@ class _TryonView extends StatelessWidget {
                         child: Center(
                           child: Text(
                             'Sau (AI)',
-                            style: AppTextStyles.titleSmall(
-                              color: state.showAfter ? const Color(0xFF1F1B2C) : const Color(0xFF7D7690),
-                            ).copyWith(
-                              fontSize: 12.sp,
-                              fontWeight: state.showAfter ? FontWeight.bold : FontWeight.w500,
-                            ),
+                            style:
+                                AppTextStyles.titleSmall(
+                                  color: state.showAfter
+                                      ? const Color(0xFF1F1B2C)
+                                      : const Color(0xFF7D7690),
+                                ).copyWith(
+                                  fontSize: 12.sp,
+                                  fontWeight: state.showAfter
+                                      ? FontWeight.bold
+                                      : FontWeight.w500,
+                                ),
                           ),
                         ),
                       ),
@@ -282,10 +316,7 @@ class _TryonView extends StatelessWidget {
           ),
           SizedBox(height: 16.h),
           // Canvas showing result
-          TryonCanvas(
-            imagePath: displayImage,
-            showPins: false,
-          ),
+          TryonCanvas(imagePath: displayImage, showPins: false),
           SizedBox(height: 20.h),
           // Metrics Row
           MetricsCards(
@@ -302,7 +333,9 @@ class _TryonView extends StatelessWidget {
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Tính năng tìm cửa hàng đang được phát triển...'),
+                    content: Text(
+                      'Tính năng tìm cửa hàng đang được phát triển...',
+                    ),
                   ),
                 );
               },
@@ -323,10 +356,9 @@ class _TryonView extends StatelessWidget {
                   SizedBox(width: 8.w),
                   Text(
                     'Tìm mua sản phẩm này',
-                    style: AppTextStyles.titleSmall(color: Colors.white).copyWith(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: AppTextStyles.titleSmall(
+                      color: Colors.white,
+                    ).copyWith(fontSize: 14.sp, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -342,10 +374,15 @@ class _TryonView extends StatelessWidget {
                   height: 48.h,
                   child: OutlinedButton(
                     onPressed: () {
-                      context.read<TryonBloc>().add(InitSession(session.originalImagePath));
+                      context.read<TryonBloc>().add(
+                        InitSession(session.originalImagePath),
+                      );
                     },
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFFD6D6E0), width: 1.5),
+                      side: const BorderSide(
+                        color: Color(0xFFD6D6E0),
+                        width: 1.5,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(24.r),
                       ),
@@ -361,10 +398,13 @@ class _TryonView extends StatelessWidget {
                         SizedBox(width: 6.w),
                         Text(
                           'Đổi đồ khác',
-                          style: AppTextStyles.titleSmall(color: const Color(0xFF1F1B2C)).copyWith(
-                            fontSize: 13.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style:
+                              AppTextStyles.titleSmall(
+                                color: const Color(0xFF1F1B2C),
+                              ).copyWith(
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                       ],
                     ),
@@ -380,12 +420,17 @@ class _TryonView extends StatelessWidget {
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Tính năng chia sẻ đang được phát triển...'),
+                          content: Text(
+                            'Tính năng chia sẻ đang được phát triển...',
+                          ),
                         ),
                       );
                     },
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFFD6D6E0), width: 1.5),
+                      side: const BorderSide(
+                        color: Color(0xFFD6D6E0),
+                        width: 1.5,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(24.r),
                       ),
@@ -401,10 +446,13 @@ class _TryonView extends StatelessWidget {
                         SizedBox(width: 6.w),
                         Text(
                           'Chia sẻ',
-                          style: AppTextStyles.titleSmall(color: const Color(0xFF1F1B2C)).copyWith(
-                            fontSize: 13.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style:
+                              AppTextStyles.titleSmall(
+                                color: const Color(0xFF1F1B2C),
+                              ).copyWith(
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                       ],
                     ),

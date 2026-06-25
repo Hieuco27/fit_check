@@ -37,9 +37,8 @@ class UserAvatarCard extends StatelessWidget {
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
                     colors: [
-                      Color(0xFF00C6FF), // Neon Blue
-                      Color(0xFF8E2DE2), // Purple
-                      Color(0xFFF000FF), // Neon Pink
+                      AppColors.homeAccentLight,
+                      AppColors.homeAccentBrown,
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -78,7 +77,7 @@ class UserAvatarCard extends StatelessWidget {
                     width: 32.w,
                     height: 32.w,
                     decoration: BoxDecoration(
-                      color: AppColors.brandPurple,
+                      color: AppColors.homeAccentBrown,
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 2.w),
                       boxShadow: [
@@ -107,7 +106,7 @@ class UserAvatarCard extends StatelessWidget {
         Text(
           name,
           style: AppTextStyles.titleLarge().copyWith(
-            color: const Color(0xFF1F1B2C),
+            color: AppColors.homeTextPrimary,
             fontSize: 24.sp,
             fontWeight: FontWeight.w800,
           ),
@@ -118,7 +117,7 @@ class UserAvatarCard extends StatelessWidget {
         Text(
           '$styleTitle • $location',
           style: AppTextStyles.bodyMedium().copyWith(
-            color: const Color(0xFF7D7690),
+            color: AppColors.homeTextSecondary,
             fontSize: 12.sp,
             fontWeight: FontWeight.w500,
           ),

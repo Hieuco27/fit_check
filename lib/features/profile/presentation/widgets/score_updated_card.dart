@@ -23,10 +23,7 @@ class ScoreUpdatedCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(
-            color: const Color(0xFFF5F2F9),
-            width: 1.5,
-          ),
+          border: Border.all(color: AppColors.homeDivider, width: 1.5),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.01),
@@ -41,14 +38,14 @@ class ScoreUpdatedCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Left Colored Bar (Purple highlight)
-              Container(
-                width: 4.w,
-                color: AppColors.brandPurple,
-              ),
+              Container(width: 4.w, color: AppColors.homeAccentBrown),
               // Main content area
               Expanded(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.w,
+                    vertical: 16.h,
+                  ),
                   child: Row(
                     children: [
                       // Sparkle Circle Icon
@@ -56,13 +53,13 @@ class ScoreUpdatedCard extends StatelessWidget {
                         width: 44.w,
                         height: 44.w,
                         decoration: const BoxDecoration(
-                          color: Color(0xFFF1EAFF),
+                          color: AppColors.homeAccentCream,
                           shape: BoxShape.circle,
                         ),
                         child: Center(
                           child: Icon(
                             Icons.auto_awesome,
-                            color: AppColors.brandPurple,
+                            color: AppColors.homeAccentBrown,
                             size: 20.sp,
                           ),
                         ),
@@ -76,16 +73,19 @@ class ScoreUpdatedCard extends StatelessWidget {
                           children: [
                             Text(
                               title,
-                              style: AppTextStyles.titleMedium(color: const Color(0xFF1F1B2C)).copyWith(
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style:
+                                  AppTextStyles.titleMedium(
+                                    color: AppColors.homeTextPrimary,
+                                  ).copyWith(
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                             ),
                             SizedBox(height: 2.h),
                             Text(
                               description,
                               style: AppTextStyles.bodyMedium().copyWith(
-                                color: const Color(0xFF7D7690),
+                                color: AppColors.homeTextSecondary,
                                 fontSize: 11.sp,
                                 height: 1.3,
                               ),
@@ -97,7 +97,7 @@ class ScoreUpdatedCard extends StatelessWidget {
                       // Right Chevron
                       Icon(
                         Icons.chevron_right,
-                        color: const Color(0xFF7D7690),
+                        color: AppColors.homeTextSecondary,
                         size: 20.sp,
                       ),
                     ],
